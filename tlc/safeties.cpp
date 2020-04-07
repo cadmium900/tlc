@@ -13,7 +13,8 @@ tSafeties gSafeties;
 // Initialize safeties
 bool Safeties_Init()
 {
-    gSafeties.bEnabled              = true;
+    //gSafeties.bEnabled              = true;
+    gSafeties.bEnabled              = false;
     gSafeties.bCritical             = false;
     gSafeties.bConfigurationInvalid = false;
 

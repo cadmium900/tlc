@@ -23,14 +23,19 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Fail");
+#endif
+        Serial.println("DEBUG: Invalid config, revert to default");
         Configuration_SetDefaults();
         Configuration_Write();
     }
     else
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Success");
-
+#endif
+        Serial.println("DEBUG: Config loaded");
     }
 #endif
 
@@ -65,22 +70,23 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
 bool Configuration_SetDefaults()
 {
     gConfiguration.nVersion                 = kEEPROM_Version;
-    gConfiguration.fMinBatteryLevel         = 10.0f;
+    gConfiguration.fMinBatteryLevel         = 11.0f;
     gConfiguration.nPressureSensorOffset[0] = 0;
     gConfiguration.nPressureSensorOffset[1] = 0;
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
-    gConfiguration.fGainP                   = 250.5f;
-    gConfiguration.fGainI                   = 0.01f;
+    gConfiguration.fGainP                   = 50.0f;
+    gConfiguration.fGainI                   = 0.00f;
     gConfiguration.fGainD                   = 0.0000f;
     gConfiguration.fILimit                  = 5.0f;
     gConfiguration.fPILimit                 = 1000.0f;
-    gConfiguration.fControlTransfer         = 1.0f;
+    gConfiguration.fControlTransfer         = 1.5f;
     gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
-    gConfiguration.nServoExhaleOpenAngle    = 2270;
+    gConfiguration.nServoExhaleOpenAngle    = 1500;
     gConfiguration.nServoExhaleCloseAngle   = 750;
     gConfiguration.nCRC                     = 0; // Clear CRC for computation
+
 
     return true;
 }
@@ -99,7 +105,14 @@ bool Configuration_Read()
     gConfiguration.nCRC = 0; // Clear CRC for computation
     uint32_t cmpCRC = CRC32(pConfiguration, sizeof(tConfiguration));
 
-    return (oemCRC == cmpCRC) && (gConfiguration.nVersion == kEEPROM_Version);
+    bool ret = (oemCRC == cmpCRC) && (gConfiguration.nVersion == kEEPROM_Version);
+    if(ret){
+        Serial.println("DEBUG: Configuration_Read success");
+    }else{
+        Serial.println("DEBUG: Configuration_Read failed");
+    }   
+
+    return ret;
 }
 
 // Write configuration to EEPROM, returns true if successful
@@ -117,5 +130,7 @@ bool Configuration_Write()
         EEPROM[a] = pConfiguration[a];
     }
 
+    Serial.println("DEBUG: Configuration_Write success (?)");
+    
     return true;
 }

@@ -31,8 +31,10 @@ bool DataModel_Init()
     gDataModel.nControlMode             = kControlMode_PID;
     gDataModel.nTriggerMode             = kTriggerMode_Timed;
 
-    gDataModel.fInhalePressureTarget_mmH2O = 2500.0f; // 25 cmH2O
-    gDataModel.fExhalePressureTarget_mmH2O = 500.0f;  // 5 cmH2O
+    //gDataModel.fInhalePressureTarget_mmH2O = 2500.0f; // 25 cmH2O
+    //gDataModel.fExhalePressureTarget_mmH2O = 500.0f;  // 5 cmH2O
+    gDataModel.fInhalePressureTarget_mmH2O = 250.0f; // 25 cmH2O
+    gDataModel.fExhalePressureTarget_mmH2O = 50.0f;  // 5 cmH2O
     gDataModel.fInhaleRatio                = 1.0f;    // 33%
     gDataModel.fExhaleRatio                = 3.0f;
 
@@ -42,4 +44,3 @@ bool DataModel_Init()
     gDataModel.nState = kState_Init;
     return true;
 }
-

@@ -67,17 +67,30 @@ void Sensors_Process()
 
     gDataModel.fPressure_mmH2O[0] = mmH2O;
 
+   /* static uint32_t nLastPrintTick = 0;
+    if ((millis() - nLastPrintTick) >= 50)
+    {
+    char szDbgPressure[6];
+    // 4 is mininum width, 2 is precision; float value is copied onto str_temp
+    dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szDbgPressure);
+    Serial.print("DEBUG: ");
+    Serial.print(szDbgPressure);
+    Serial.println("mmH2O");
+    nLastPrintTick = millis();
+    }*/
+    
     // Redundant pressure reading, for safeties
     mV      = (float)gDataModel.nRawPressure[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     mmH2O   = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
-
+#ifdef ENABLE_LCD
     char szPressure[6];
     // 4 is mininum width, 2 is precision; float value is copied onto str_temp
     dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szPressure);
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
-
-    gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
+#endif
+    //gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
+    gDataModel.fBatteryLevel = 12.1f;
 }
