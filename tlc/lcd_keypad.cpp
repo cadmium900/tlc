@@ -7,7 +7,7 @@
 #include "common.h"
 #include "lcd_keypad.h"
 
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
 
 #include <Adafruit_RGBLCDShield.h>
 

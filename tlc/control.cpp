@@ -21,10 +21,41 @@ bool Control_Init()
 
     pumpServo.write(750);  // DE 750 a 2250
     
-    gDataModel.bStartFlag = false;
+    gDataModel.nRqState = kRqState_Stop;
 
     return true;
 }
+
+bool Control_SetCurveFromDataModel()
+{
+    if (gDataModel.nRespirationPerMinute > 0 && gDataModel.fExhaleRatio > 0.0f)
+    {        
+        float breatheTime = 60.0f / gDataModel.nRespirationPerMinute;
+        float fInhaleTime = breatheTime * (gDataModel.fInhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio));
+        float fExhaleTime = breatheTime * (gDataModel.fExhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio));
+        
+        // Inhale curve
+        uint16_t nPointTickMs = (uint16_t)((fInhaleTime * 1000.0f) / (float)kMaxCurveCount);
+        gDataModel.pInhaleCurve.nCount = kMaxCurveCount;
+        for (int a = 0; a < gDataModel.pInhaleCurve.nCount; ++a)
+        {
+            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fInhalePressureTarget_mmH2O;
+            gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+        }
+
+        nPointTickMs = (uint16_t)((fExhaleTime * 1000.0f) / (float)kMaxCurveCount);
+        gDataModel.pExhaleCurve.nCount = kMaxCurveCount;
+        for (int a = 0; a < gDataModel.pExhaleCurve.nCount; ++a)
+        {
+            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fExhalePressureTarget_mmH2O;
+            gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+        }
+        return true;
+    }
+
+    gSafeties.bConfigurationInvalid = true;    
+    return false;
+ }
 
 // Control using a PID with pressure feedback
 void Control_PID()
@@ -92,7 +123,6 @@ static bool CheckTrigger()
 
     default:
         // Invalid setting
-        Serial.println("DEBUG: Invalid trigger mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         return false;
@@ -217,7 +247,7 @@ static bool ComputeRespirationSetPoint()
     switch (gDataModel.nCycleState)
     {
     case kCycleState_WaitTrigger:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "Trigger   ");
 #endif
         if (CheckTrigger())
@@ -237,7 +267,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Inhale:
         {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
             sprintf(gLcdDetail, "Inhale  ");
 #endif
             bool inhaleFinished = Inhale();
@@ -259,7 +289,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Exhale:
         {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
             sprintf(gLcdDetail, "Exhale   ");
 #endif
             bool exhaleFinished = Exhale();
@@ -274,7 +304,7 @@ static bool ComputeRespirationSetPoint()
         break;
 
     case kCycleState_Stabilization:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "Stabil   ");
 #endif
         // Pressure Stabilization between cycles
@@ -285,11 +315,10 @@ static bool ComputeRespirationSetPoint()
         break;
 
     default:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "N/A   ");
 #endif
         // Invalid setting
-        Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         gDataModel.nCycleState          = kCycleState_WaitTrigger;
@@ -301,7 +330,7 @@ static bool ComputeRespirationSetPoint()
 
 void Control_Process()
 {
-    if (!gDataModel.bStartFlag || gDataModel.nState != kState_Process)
+    if (gDataModel.nRqState != kRqState_Start || gDataModel.nState != kState_Process)
     {
         gDataModel.nCycleState = kCycleState_WaitTrigger;
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
@@ -328,7 +357,6 @@ void Control_Process()
 
     default:
         // Unknown control mode, raise error.
-        Serial.println("DEBUG: Unknown control mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         break;
@@ -338,7 +366,7 @@ void Control_Process()
     uint16_t pwm = gDataModel.nPWMPump + 750;
     if (pwm > 2250)
     {
-      pwm = 2250;
+        pwm = 2250;
     }
     pumpServo.write(pwm);
 }

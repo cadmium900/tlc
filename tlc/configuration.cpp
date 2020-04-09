@@ -23,19 +23,17 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdMsg, "NVM Fail");
 #endif
-        Serial.println("DEBUG: Invalid config, revert to default");
         Configuration_SetDefaults();
         Configuration_Write();
     }
     else
     {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdMsg, "NVM Success");
 #endif
-        Serial.println("DEBUG: Config loaded");
     }
 #endif
 
@@ -106,12 +104,6 @@ bool Configuration_Read()
     uint32_t cmpCRC = CRC32(pConfiguration, sizeof(tConfiguration));
 
     bool ret = (oemCRC == cmpCRC) && (gConfiguration.nVersion == kEEPROM_Version);
-    if(ret){
-        Serial.println("DEBUG: Configuration_Read success");
-    }else{
-        Serial.println("DEBUG: Configuration_Read failed");
-    }   
-
     return ret;
 }
 
@@ -129,8 +121,6 @@ bool Configuration_Write()
     {
         EEPROM[a] = pConfiguration[a];
     }
-
-    Serial.println("DEBUG: Configuration_Write success (?)");
     
     return true;
 }

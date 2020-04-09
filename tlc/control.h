@@ -16,6 +16,10 @@ extern ServoTimer2 pumpServo;
 /// \brief Initialize control
 bool Control_Init();
 
+/// \fn bool Control_SetCurveFromDataModel()
+/// \brief Refresh the respiration curve from stored values in the data model
+bool Control_SetCurveFromDataModel();
+
 /// \fn bool Control_Process()
 /// \brief Process control
 void Control_Process();

@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "browse": {
+                "path": [
+                    "${workspaceRoot}"
+                ]
+            },
+            "includePath": [
+                "h:\\Data\\arduino\\libraries\\avr-debugger\\src",
+                "${workspaceRoot}",
+                "H:\\Program Files (x86)\\Arduino\\tools\\**",
+                "H:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
+                ".\\",
+                "h:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\avr\\include\\**",
+                "h:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr\\include\\**"
+            ],
+            "forcedInclude": [
+                "H:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
+            ],
+            "intelliSenseMode": "msvc-x64",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
