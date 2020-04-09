@@ -34,8 +34,7 @@ extern tConfiguration gConfiguration;
 
 HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration) == offsetof(tConfiguration, nCRC)+4));
 #define CFGPROTOCOL_KEY (uint16_t)offsetof(tConfiguration, nVersion) + \
-                        (uint16_t)offsetof(tConfiguration, nPressureSensorOffset[0]) + \
-						(uint16_t)offsetof(tConfiguration, nPressureSensorOffset[1]) + \
+                        (uint16_t)offsetof(tConfiguration, nPressureSensorOffset) + \
 						(uint16_t)offsetof(tConfiguration, fMinBatteryLevel) + \
 						(uint16_t)offsetof(tConfiguration, fMaxPressureLimit_mmH2O) + \
 						(uint16_t)offsetof(tConfiguration, fMinPressureLimit_mmH2O) + \
@@ -51,7 +50,7 @@ HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration)
 						(uint16_t)offsetof(tConfiguration, nServoExhaleCloseAngle) + \
 						(uint16_t)offsetof(tConfiguration, nCRC)
 
-HXCOMPILATIONASSERT(assertCheckConfigurationProtocolKey, (CFGPROTOCOL_KEY == 432));
+HXCOMPILATIONASSERT(assertCheckConfigurationProtocolKey, (CFGPROTOCOL_KEY == 429));
 
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, CFGPROTOCOL_KEY);
 // Uncomment to trace the size of tConfiguration at compile-time:   HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tConfiguration));

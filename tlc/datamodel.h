@@ -86,8 +86,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
 						(uint16_t)offsetof(tDataModel, nControlMode) + \
 						(uint16_t)offsetof(tDataModel, nTriggerMode) + \
 						(uint16_t)offsetof(tDataModel, nCycleState) + \
-						(uint16_t)offsetof(tDataModel, nRawPressure[0]) + \
-						(uint16_t)offsetof(tDataModel, nRawPressure[1]) + \
+						(uint16_t)offsetof(tDataModel, nRawPressure) + \
 						(uint16_t)offsetof(tDataModel, fBatteryLevel) + \
 						(uint16_t)offsetof(tDataModel, pInhaleCurve) + \
 						(uint16_t)offsetof(tDataModel, pExhaleCurve) + \
@@ -98,8 +97,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
 						(uint16_t)offsetof(tDataModel, fExhalePressureTarget_mmH2O) + \
 						(uint16_t)offsetof(tDataModel, fInhaleRatio) + \
 						(uint16_t)offsetof(tDataModel, fExhaleRatio) + \
-						(uint16_t)offsetof(tDataModel, fPressure_mmH2O[0]) + \
-						(uint16_t)offsetof(tDataModel, fPressure_mmH2O[1]) + \
+						(uint16_t)offsetof(tDataModel, fPressure_mmH2O) + \
 						(uint16_t)offsetof(tDataModel, fPressureError) + \
 						(uint16_t)offsetof(tDataModel, fP) + \
 						(uint16_t)offsetof(tDataModel, fI) + \
@@ -116,7 +114,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
 						(uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
 						(uint16_t)offsetof(tDataModel, nTerminator)
 
-HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4643));
+HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4458));
 
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, PROTOCOL_KEY);
 // Uncomment to trace the size of tDataModel at compile-time:       HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tDataModel));
