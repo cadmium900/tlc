@@ -18,7 +18,7 @@
 /// \brief General constants used throughout the firmware
 enum eConsts
 {
-    kSerialBaudRate             = 115200,   ///> Baud rate of serial port
+    kSerialBaudRate             = 500000,   ///> Baud rate of serial port
     kSerialRxTimeOut            = 10,       ///> Maximum wait time in ms to wait for serial data
     kCommBufferSize             = 128,      ///> Maximum rx buffer size
     kRxBufferReserve            = 10,       ///> Reserve of data before we start discarding rx buffer
@@ -89,7 +89,7 @@ enum ePacketCommand
     kPacketCommand_WriteData            = 1,
     kPacketCommand_ReadCfg              = 2,
     kPacketCommand_WriteCfg             = 3,
-    kPacketCommand_WriteCfgToEeeprom    = 4,
+    kPacketCommand_WriteCfgToEeprom     = 4,
     kPacketCommand_LoadCfgFromEeprom    = 5,
     kPacketCommand_SetDefaultCfg        = 6,
     kPacketCommand_SetZeroPressure      = 7,

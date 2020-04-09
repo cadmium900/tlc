@@ -82,6 +82,22 @@ static void SendControlAck(tPacketHeader* pReplyHeader, tPacketHeader* packet)
     SendControl(pReplyHeader);
 }
 
+static void SendControlTest(tPacketHeader* pReplyHeader)
+{    
+    tPacketReadData* payload = (tPacketReadData*)((uint8_t*)pReplyHeader + sizeof(tPacketHeader));
+    pReplyHeader->id     = kPacketId;
+    pReplyHeader->cmd    = kPacketCommand_ReadData;
+    pReplyHeader->size   = sizeof(tPacketHeader) + sizeof(tPacketReadData);
+    pReplyHeader->keyCfg = CFGPROTOCOL_KEY;
+    pReplyHeader->keyDataModel = PROTOCOL_KEY;
+    pReplyHeader->crc    = 0;
+    payload->bytesToRead = 17;
+    payload->offset      = 0;
+    pReplyHeader->crc    = CRC16((uint8_t*)pReplyHeader, pReplyHeader->size);
+    SendControl(pReplyHeader);
+}
+
+
 static void ParseCommand(tPacketHeader* packet)
 {
     tPacketHeader*  pReplyHeader    = (tPacketHeader*)gTxBuffer;
@@ -190,7 +206,7 @@ static void ParseCommand(tPacketHeader* packet)
         }
         break;
 
-    case kPacketCommand_WriteCfgToEeeprom:
+    case kPacketCommand_WriteCfgToEeprom:
         {
             bool success = Configuration_Write();
             if (success)
@@ -269,9 +285,10 @@ static void ParseCommand(tPacketHeader* packet)
                             payload->exhaleMmH2O >= 0.0f && payload->exhaleMmH2O <= 250.0f &&
                             payload->inhaleRatio >= 0.0f && payload->exhaleRatio >= 0.0f   &&
                             payload->breatheRate >= 6.0f && payload->breatheRate <= 40.0f);
+            success = true; //*** We will skip the check for debugging
             if (success)
             {
-                gDataModel.nRespirationPerMinute        = (float)payload->breatheRate;
+                gDataModel.nRespirationPerMinute        = payload->breatheRate;
                 gDataModel.fInhalePressureTarget_mmH2O  = payload->inhaleMmH2O;
                 gDataModel.fExhalePressureTarget_mmH2O  = payload->exhaleMmH2O;
                 gDataModel.fInhaleRatio                 = payload->inhaleRatio;
@@ -313,6 +330,8 @@ void Communications_Process()
     }
     else
     {
+        //SendControlTest((tPacketHeader*)gTxBuffer);
+
         if (Serial.available() > 0)
         {
             if ((millis() - gRxBuffer.lastRxTick) > kSerialDiscardTimeout)
@@ -327,13 +346,14 @@ void Communications_Process()
                 count = kCommBufferSize;
             }
 
-            Serial.readBytes(&gRxBuffer.data[ofs], count-ofs);
+            int nRead = Serial.readBytes(&gRxBuffer.data[ofs], count-ofs);
+            count = gRxBuffer.rxSize + nRead;
 
             uint8_t cmdOfs = 0;
 
             // Scan for packet header
             if (count >= sizeof(tPacketHeader))
-            {                
+            {            
                 for (uint8_t a = 0; a < (uint8_t)count; ++a)
                 {
                     tPacketHeader* header = (tPacketHeader*)&gRxBuffer.data[a];
@@ -341,7 +361,7 @@ void Communications_Process()
                     {
                         // Check for complete rx'ed size and crc
                         if (count-a >= header->size)
-                        {
+                        {                            
                             uint16_t oemCrc = header->crc;
                             header->crc = 0;
                             if (oemCrc == CRC16((uint8_t*)header, header->size))
@@ -350,7 +370,7 @@ void Communications_Process()
                                 if (header->keyCfg       == CFGPROTOCOL_KEY &&
                                     header->keyDataModel == PROTOCOL_KEY)
                                 {
-                                    // Valid Packet Detected!
+                                    // Valid Packet Detected!                                    
                                     ParseCommand(header);
                                 }
                             }
