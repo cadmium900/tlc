@@ -20,7 +20,7 @@ bool Control_Init()
     exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
     pumpServo.write(750);  // DE 750 a 2250
-    
+
     gDataModel.nRqState = kRqState_Stop;
 
     return true;
@@ -29,11 +29,11 @@ bool Control_Init()
 bool Control_SetCurveFromDataModel()
 {
     if (gDataModel.nRespirationPerMinute > 0 && gDataModel.fExhaleRatio > 0.0f)
-    {        
+    {
         float breatheTime = 60.0f / gDataModel.nRespirationPerMinute;
         float fInhaleTime = breatheTime * (gDataModel.fInhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio));
         float fExhaleTime = breatheTime * (gDataModel.fExhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio));
-        
+
         // Inhale curve
         uint16_t nPointTickMs = (uint16_t)((fInhaleTime * 1000.0f) / (float)kMaxCurveCount);
         gDataModel.pInhaleCurve.nCount = kMaxCurveCount;
@@ -53,7 +53,7 @@ bool Control_SetCurveFromDataModel()
         return true;
     }
 
-    gSafeties.bConfigurationInvalid = true;    
+    gSafeties.bConfigurationInvalid = true;
     return false;
  }
 
@@ -335,7 +335,7 @@ void Control_Process()
         gDataModel.nCycleState = kCycleState_WaitTrigger;
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
         gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
-        
+
         pumpServo.write(750);
         return;
     }

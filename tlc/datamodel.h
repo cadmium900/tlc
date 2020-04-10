@@ -13,7 +13,7 @@
 /// \brief Describe a pressurecurve to execute
 ///
 /// A collection of setpoints of pressure in time to execute for the respiration cycle
-struct tPressureCurve 
+struct tPressureCurve
 {
     float           fSetPoint_mmH2O[kMaxCurveCount];    ///> Pressure for every point of the curve
     uint32_t        nSetPoint_TickMs[kMaxCurveCount];   ///> Number of millisecond to execute point of the curve
@@ -26,17 +26,17 @@ struct tPressureCurve
 /// A centralised collection of information read and written by modules
 /// The data model structure is used directly as a register file by communications
 /// Changing this structure directly affects communications protocol serialization
-struct tDataModel 
-{    
-    uint16_t        nSafetyFlags;           ///> Bitmask of safety alarm source eAlarm    
-    uint8_t         nRqState;               ///> Requested state from eRqState
+struct tDataModel
+{
+    uint16_t        nSafetyFlags;           ///> Bitmask of safety alarm source eAlarm
     eState          nState;                 ///> System state
+    uint8_t         nRqState;               ///> Requested state from eRqState
     eControlMode    nControlMode;           ///> Control mode of the pump
     eTriggerMode    nTriggerMode;           ///> Respiration trigger mode
     eCycleState     nCycleState;            ///> Respiration cycle state
     uint8_t         nRawPressure[2];        ///> Raw read pressure from sensor
     float           fBatteryLevel;          ///> Battery voltage level
-    
+
     tPressureCurve  pInhaleCurve;           ///> Inhale curve descriptor
     tPressureCurve  pExhaleCurve;           ///> Exhale curve descriptor
     uint8_t         nCurveIndex;            ///> Current executing curve setpoint index
@@ -82,40 +82,39 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
 
 #define PROTOCOL_KEY    (uint16_t)offsetof(tDataModel, nSafetyFlags) + \
                         (uint16_t)offsetof(tDataModel, nRqState) + \
-						(uint16_t)offsetof(tDataModel, nState) + \
-						(uint16_t)offsetof(tDataModel, nControlMode) + \
-						(uint16_t)offsetof(tDataModel, nTriggerMode) + \
-						(uint16_t)offsetof(tDataModel, nCycleState) + \
-						(uint16_t)offsetof(tDataModel, nRawPressure) + \
-						(uint16_t)offsetof(tDataModel, fBatteryLevel) + \
-						(uint16_t)offsetof(tDataModel, pInhaleCurve) + \
-						(uint16_t)offsetof(tDataModel, pExhaleCurve) + \
-						(uint16_t)offsetof(tDataModel, nCurveIndex) + \
-						(uint16_t)offsetof(tDataModel, fRequestPressure_mmH2O) + \
-						(uint16_t)offsetof(tDataModel, nRespirationPerMinute) + \
-						(uint16_t)offsetof(tDataModel, fInhalePressureTarget_mmH2O) + \
-						(uint16_t)offsetof(tDataModel, fExhalePressureTarget_mmH2O) + \
-						(uint16_t)offsetof(tDataModel, fInhaleRatio) + \
-						(uint16_t)offsetof(tDataModel, fExhaleRatio) + \
-						(uint16_t)offsetof(tDataModel, fPressure_mmH2O) + \
-						(uint16_t)offsetof(tDataModel, fPressureError) + \
-						(uint16_t)offsetof(tDataModel, fP) + \
-						(uint16_t)offsetof(tDataModel, fI) + \
-						(uint16_t)offsetof(tDataModel, fD) + \
-						(uint16_t)offsetof(tDataModel, fPI) + \
-						(uint16_t)offsetof(tDataModel, nPWMPump) + \
-						(uint16_t)offsetof(tDataModel, nTickControl) + \
-						(uint16_t)offsetof(tDataModel, nTickCommunications) + \
-						(uint16_t)offsetof(tDataModel, nTickSensors) + \
-						(uint16_t)offsetof(tDataModel, nTickSetPoint) + \
-						(uint16_t)offsetof(tDataModel, nTickRespiration) + \
-						(uint16_t)offsetof(tDataModel, nTickStabilization) + \
-						(uint16_t)offsetof(tDataModel, nTickWait) + \
-						(uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
-						(uint16_t)offsetof(tDataModel, nTerminator)
+                        (uint16_t)offsetof(tDataModel, nState) + \
+                        (uint16_t)offsetof(tDataModel, nControlMode) + \
+                        (uint16_t)offsetof(tDataModel, nTriggerMode) + \
+                        (uint16_t)offsetof(tDataModel, nCycleState) + \
+                        (uint16_t)offsetof(tDataModel, nRawPressure) + \
+                        (uint16_t)offsetof(tDataModel, fBatteryLevel) + \
+                        (uint16_t)offsetof(tDataModel, pInhaleCurve) + \
+                        (uint16_t)offsetof(tDataModel, pExhaleCurve) + \
+                        (uint16_t)offsetof(tDataModel, nCurveIndex) + \
+                        (uint16_t)offsetof(tDataModel, fRequestPressure_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, nRespirationPerMinute) + \
+                        (uint16_t)offsetof(tDataModel, fInhalePressureTarget_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, fExhalePressureTarget_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, fInhaleRatio) + \
+                        (uint16_t)offsetof(tDataModel, fExhaleRatio) + \
+                        (uint16_t)offsetof(tDataModel, fPressure_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, fPressureError) + \
+                        (uint16_t)offsetof(tDataModel, fP) + \
+                        (uint16_t)offsetof(tDataModel, fI) + \
+                        (uint16_t)offsetof(tDataModel, fD) + \
+                        (uint16_t)offsetof(tDataModel, fPI) + \
+                        (uint16_t)offsetof(tDataModel, nPWMPump) + \
+                        (uint16_t)offsetof(tDataModel, nTickControl) + \
+                        (uint16_t)offsetof(tDataModel, nTickCommunications) + \
+                        (uint16_t)offsetof(tDataModel, nTickSensors) + \
+                        (uint16_t)offsetof(tDataModel, nTickSetPoint) + \
+                        (uint16_t)offsetof(tDataModel, nTickRespiration) + \
+                        (uint16_t)offsetof(tDataModel, nTickStabilization) + \
+                        (uint16_t)offsetof(tDataModel, nTickWait) + \
+                        (uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
+                        (uint16_t)offsetof(tDataModel, nTerminator)
 
-HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4458));
-
+HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4459));
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, PROTOCOL_KEY);
 // Uncomment to trace the size of tDataModel at compile-time:       HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tDataModel));
 

@@ -23,6 +23,7 @@ enum eConsts
     kCommBufferSize             = 128,      ///> Maximum rx buffer size
     kRxBufferReserve            = 10,       ///> Reserve of data before we start discarding rx buffer
     kSerialDiscardTimeout       = 500,      ///> Discard rx buffer timeout
+    kSerialCommandTimeout       = 2000,     ///> Restart comms if no commands received timeout
     kPeriodControl              = 5,        ///> Period to call control loop in milliseconds
     kPeriodCommunications       = 2,        ///> Period to call communications loop in milliseconds
     kPeriodLcdKeypad            = 250,      ///> Period to refresh Lcd and scan keypad in milliseconds
@@ -49,7 +50,7 @@ struct tPacketHeader
     uint16_t crc;
     uint16_t keyDataModel;
     uint16_t keyCfg;
-    uint8_t  cmd;    
+    uint8_t  cmd;
 } __attribute__((packed));
 
 /// \struct tPacketReadData
@@ -97,7 +98,7 @@ enum ePacketCommand
     kPacketCommand_DisableSafeties      = 9,
     kPacketCommand_EnableSafeties       = 10,
     kPacketCommand_SetCurve             = 11,
-        
+
     // Firmware reply to received command with ack or nack set as bit 7 or 6
     kPacketCommand_MaskAck              = (1<<7),
     kPacketCommand_MaskNAck             = (1<<6)

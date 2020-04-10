@@ -35,20 +35,20 @@ extern tConfiguration gConfiguration;
 HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration) == offsetof(tConfiguration, nCRC)+4));
 #define CFGPROTOCOL_KEY (uint16_t)offsetof(tConfiguration, nVersion) + \
                         (uint16_t)offsetof(tConfiguration, nPressureSensorOffset) + \
-						(uint16_t)offsetof(tConfiguration, fMinBatteryLevel) + \
-						(uint16_t)offsetof(tConfiguration, fMaxPressureLimit_mmH2O) + \
-						(uint16_t)offsetof(tConfiguration, fMinPressureLimit_mmH2O) + \
-						(uint16_t)offsetof(tConfiguration, fMaxPressureDelta_mmH2O) + \
-						(uint16_t)offsetof(tConfiguration, fGainP) + \
-						(uint16_t)offsetof(tConfiguration, fGainI) + \
-						(uint16_t)offsetof(tConfiguration, fGainD) + \
-						(uint16_t)offsetof(tConfiguration, fILimit) + \
-						(uint16_t)offsetof(tConfiguration, fPILimit) + \
-						(uint16_t)offsetof(tConfiguration, fControlTransfer) + \
-						(uint16_t)offsetof(tConfiguration, fPatientTrigger_mmH2O) + \
-						(uint16_t)offsetof(tConfiguration, nServoExhaleOpenAngle) + \
-						(uint16_t)offsetof(tConfiguration, nServoExhaleCloseAngle) + \
-						(uint16_t)offsetof(tConfiguration, nCRC)
+                        (uint16_t)offsetof(tConfiguration, fMinBatteryLevel) + \
+                        (uint16_t)offsetof(tConfiguration, fMaxPressureLimit_mmH2O) + \
+                        (uint16_t)offsetof(tConfiguration, fMinPressureLimit_mmH2O) + \
+                        (uint16_t)offsetof(tConfiguration, fMaxPressureDelta_mmH2O) + \
+                        (uint16_t)offsetof(tConfiguration, fGainP) + \
+                        (uint16_t)offsetof(tConfiguration, fGainI) + \
+                        (uint16_t)offsetof(tConfiguration, fGainD) + \
+                        (uint16_t)offsetof(tConfiguration, fILimit) + \
+                        (uint16_t)offsetof(tConfiguration, fPILimit) + \
+                        (uint16_t)offsetof(tConfiguration, fControlTransfer) + \
+                        (uint16_t)offsetof(tConfiguration, fPatientTrigger_mmH2O) + \
+                        (uint16_t)offsetof(tConfiguration, nServoExhaleOpenAngle) + \
+                        (uint16_t)offsetof(tConfiguration, nServoExhaleCloseAngle) + \
+                        (uint16_t)offsetof(tConfiguration, nCRC)
 
 HXCOMPILATIONASSERT(assertCheckConfigurationProtocolKey, (CFGPROTOCOL_KEY == 429));
 

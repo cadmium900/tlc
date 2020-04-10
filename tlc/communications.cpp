@@ -19,6 +19,7 @@ struct tRxBuffer
     uint8_t     data[kCommBufferSize];  ///> Data receive on serial port
     uint8_t     rxSize;                 ///> Size of data buffer
     uint32_t    lastRxTick;             ///> Last reception tick
+    uint32_t    lastCmdTick;            ///> Last valid command tick
 };
 static tRxBuffer    gRxBuffer;
 static uint8_t      gTxBuffer[kCommBufferSize];
@@ -29,6 +30,7 @@ bool Communications_Init()
 
     gRxBuffer.rxSize        = 0;
     gRxBuffer.lastRxTick    = millis();
+    gRxBuffer.lastCmdTick   = millis();
 
     Serial.begin(kSerialBaudRate);
 
@@ -42,7 +44,7 @@ static uint16_t CRC16(uint8_t* pBuffer, uint8_t len)
     for (uint8_t a = 0; a < len; ++a)
     {
         crc ^= pBuffer[a] << 8;
-        for(int b = 0; b < 8; ++b) 
+        for(int b = 0; b < 8; ++b)
         {
             if (crc & 0x8000)
             {
@@ -59,7 +61,7 @@ static uint16_t CRC16(uint8_t* pBuffer, uint8_t len)
 
 static void SendControl(tPacketHeader* packet)
 {
-    Serial.write((uint8_t*)packet, packet->size);        
+    Serial.write((uint8_t*)packet, packet->size);
 }
 
 static void SendControlNAck(tPacketHeader* pReplyHeader, tPacketHeader* packet)
@@ -82,8 +84,9 @@ static void SendControlAck(tPacketHeader* pReplyHeader, tPacketHeader* packet)
     SendControl(pReplyHeader);
 }
 
+#if 0
 static void SendControlTest(tPacketHeader* pReplyHeader)
-{    
+{
     tPacketReadData* payload = (tPacketReadData*)((uint8_t*)pReplyHeader + sizeof(tPacketHeader));
     pReplyHeader->id     = kPacketId;
     pReplyHeader->cmd    = kPacketCommand_ReadData;
@@ -96,7 +99,7 @@ static void SendControlTest(tPacketHeader* pReplyHeader)
     pReplyHeader->crc    = CRC16((uint8_t*)pReplyHeader, pReplyHeader->size);
     SendControl(pReplyHeader);
 }
-
+#endif
 
 static void ParseCommand(tPacketHeader* packet)
 {
@@ -136,7 +139,13 @@ static void ParseCommand(tPacketHeader* packet)
             {
                 uint8_t* pData = (uint8_t*)payload + sizeof(tPacketWriteData);
                 uint8_t* pDst  = (uint8_t*)&gDataModel;
+
+                // Protect nState variable, this variable is read-only for communications
+                eState oemState = gDataModel.nState;
+
                 memcpy(&pDst[payload->offset], pData, payload->bytesToWrite);
+
+                gDataModel.nState = oemState;
 
                 memcpy(pReplyHeader, packet, sizeof(tPacketHeader));
                 pReplyHeader->cmd   |= kPacketCommand_MaskAck;
@@ -293,7 +302,7 @@ static void ParseCommand(tPacketHeader* packet)
                 gDataModel.fExhalePressureTarget_mmH2O  = payload->exhaleMmH2O;
                 gDataModel.fInhaleRatio                 = payload->inhaleRatio;
                 gDataModel.fExhaleRatio                 = payload->exhaleRatio;
-                
+
                 success = Control_SetCurveFromDataModel();
                 if (success)
                 {
@@ -336,7 +345,14 @@ void Communications_Process()
         {
             if ((millis() - gRxBuffer.lastRxTick) > kSerialDiscardTimeout)
             {
+                gRxBuffer.lastRxTick = millis();
                 gRxBuffer.rxSize = 0;
+            }
+
+            if (millis() - gRxBuffer.lastCmdTick > kSerialCommandTimeout)
+            {
+               gRxBuffer.lastCmdTick = millis();
+               gRxBuffer.rxSize = 0;
             }
 
             uint8_t  ofs   = gRxBuffer.rxSize;
@@ -353,7 +369,7 @@ void Communications_Process()
 
             // Scan for packet header
             if (count >= sizeof(tPacketHeader))
-            {            
+            {
                 for (uint8_t a = 0; a < (uint8_t)count; ++a)
                 {
                     tPacketHeader* header = (tPacketHeader*)&gRxBuffer.data[a];
@@ -361,7 +377,7 @@ void Communications_Process()
                     {
                         // Check for complete rx'ed size and crc
                         if (count-a >= header->size)
-                        {                            
+                        {
                             uint16_t oemCrc = header->crc;
                             header->crc = 0;
                             if (oemCrc == CRC16((uint8_t*)header, header->size))
@@ -370,8 +386,9 @@ void Communications_Process()
                                 if (header->keyCfg       == CFGPROTOCOL_KEY &&
                                     header->keyDataModel == PROTOCOL_KEY)
                                 {
-                                    // Valid Packet Detected!                                    
+                                    // Valid Packet Detected!
                                     ParseCommand(header);
+                                    gRxBuffer.lastCmdTick   = millis();
                                 }
                             }
                             header->crc = oemCrc;

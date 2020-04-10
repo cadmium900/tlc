@@ -66,7 +66,7 @@ void Sensors_Process()
     float mmH2O = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[0] = mmH2O;
-   
+
     // Redundant pressure reading, for safeties
     mV      = (float)gDataModel.nRawPressure[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     mmH2O   = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
@@ -79,7 +79,7 @@ void Sensors_Process()
     dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szPressure);
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
 #endif
-    
+
     //gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
     gDataModel.fBatteryLevel = 12.1f;
 }

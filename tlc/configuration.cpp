@@ -121,6 +121,6 @@ bool Configuration_Write()
     {
         EEPROM[a] = pConfiguration[a];
     }
-    
+
     return true;
 }

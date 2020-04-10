@@ -11,7 +11,7 @@ tDataModel gDataModel;
 bool DataModel_Init()
 {
     memset(&gDataModel, 0, sizeof(tDataModel));
-    
+
     gDataModel.pInhaleCurve.nCount = 8;
     for (int a = 0; a < 8; ++a)
     {
