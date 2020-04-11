@@ -289,20 +289,21 @@ static void ParseCommand(tPacketHeader* packet)
 
     case kPacketCommand_SetCurve:
         {
-            tPacketCurve* payload = (tPacketCurve*)((uint8_t*)packet + sizeof(tPacketHeader));
-            //*** Make limits parametrable
-            bool success = (payload->inhaleMmH2O >= 0.0f && payload->inhaleMmH2O <= 400.0f &&
-                            payload->exhaleMmH2O >= 0.0f && payload->exhaleMmH2O <= 250.0f &&
-                            payload->inhaleRatio >= 0.0f && payload->exhaleRatio >= 0.0f   &&
-                            payload->breatheRate >= 6.0f && payload->breatheRate <= 40.0f);
-            success = true; //*** We will skip the check for debugging
+            tPacketCurve* payload = (tPacketCurve*)((uint8_t*)packet + sizeof(tPacketHeader));                       
+            bool success = true;
             if (success)
             {
                 gDataModel.nRespirationPerMinute        = payload->breatheRate;
                 gDataModel.fInhalePressureTarget_mmH2O  = payload->inhaleMmH2O;
                 gDataModel.fExhalePressureTarget_mmH2O  = payload->exhaleMmH2O;
-                gDataModel.fInhaleRatio                 = payload->inhaleRatio;
-                gDataModel.fExhaleRatio                 = payload->exhaleRatio;
+                gDataModel.fInhaleTime                  = payload->inhaleTime;
+                gDataModel.fExhaleTime                  = payload->exhaleTime;
+
+                gDataModel.fExhaleCheckPeepTime         = payload->exhaleCheckPeepTime;
+                gDataModel.fExhaleRampTime              = payload->exhaleRampTime;
+                gDataModel.fInhaleRampTime              = payload->inhaleRampTime;
+                gDataModel.fPeepHighLimit_mmH2O         = payload->peepHighLimit_mmH2O;
+                gDataModel.fPeepLowLimit_mmH2O          = payload->peepLowLimit_mmH2O;
 
                 success = Control_SetCurveFromDataModel();
                 if (success)

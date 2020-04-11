@@ -52,7 +52,7 @@ void Safeties_Process()
     {
         float fPressureDelta = gDataModel.fPressure_mmH2O[0] - gDataModel.fPressure_mmH2O[1];
 
-        gDataModel.nSafetyFlags = 0;
+        gDataModel.nSafetyFlags &= ~kAlarm_CriticalMask;
         if (gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O)
         {
             gDataModel.nSafetyFlags |= kAlarm_MaxPressureLimit;
@@ -83,7 +83,7 @@ void Safeties_Process()
             gDataModel.nSafetyFlags |= kAlarm_BatteryLow;
         }
 
-        if (gDataModel.nSafetyFlags != 0)
+        if ((gDataModel.nSafetyFlags & kAlarm_CriticalMask) != 0)
         {
             gSafeties.bCritical     = true;
             gDataModel.nState       = kState_Error;

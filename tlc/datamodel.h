@@ -45,9 +45,14 @@ struct tDataModel
     uint8_t         nRespirationPerMinute;  ///> Number of respiration per minute
     float           fInhalePressureTarget_mmH2O; ///> Inhale Pressure Target
     float           fExhalePressureTarget_mmH2O; ///> Exhale Pressure Target
-    float           fInhaleRatio;           ///> Inhale Ratio
-    float           fExhaleRatio;           ///> Exhale Ratio
-
+    float           fInhaleTime;            ///> Inhale Time in seconds
+    float           fExhaleTime;            ///> Exhale Time in seconds
+    float           fInhaleRampTime;        ///> Ramp Time to reach first target inhale pressure set point
+    float           fExhaleRampTime;        ///> Ramp Time to reach first target exhale pressure set point
+    float           fExhaleCheckPeepTime;   ///> Check peep during exhale after this elapsed time (relative to start of exhale cycle)
+    float           fPeepLowLimit_mmH2O;    ///> Low Peep limit
+    float           fPeepHighLimit_mmH2O;   ///> High Peep limit
+    
     float           fPressure_mmH2O[2];     ///> Converted pressure, useable as mmH2O
     float           fPressure_Flow;         ///> Converted flow pressure
     float           fPressureError;         ///> Pressure error: readings vs set-point
@@ -57,10 +62,12 @@ struct tDataModel
     float           fPI;                    ///> Control Sum of Proportional and Integral errors
     uint16_t        nPWMPump;               ///> Pump PWM power output
 
+    uint32_t        nTickFromStart;         ///> Ticks in ms since the start of respiration
     uint32_t        nTickControl;           ///> Last control tick
     uint32_t        nTickCommunications;    ///> Last communications tick
     uint32_t        nTickSensors;           ///> Last sensors tick
     uint32_t        nTickSetPoint;          ///> Current curve pressure set-point ticker
+    uint32_t        nTickStartExhale;       ///> Beggining ot the exhale tick
     uint32_t        nTickRespiration;       ///> Start of respiration tick
     uint32_t        nTickStabilization;     ///> Stabilization tick between respiration
     uint32_t        nTickWait;              ///> Wait tick after respiration
@@ -78,7 +85,7 @@ HXCOMPILATIONASSERT(assertEnumCycleStateSizeCheck,   (sizeof(eCycleState) == 2))
 
 // The protocol assumes that there is maximum 8 points in a curve
 HXCOMPILATIONASSERT(assertMaxCurveCountCheck,        (kMaxCurveCount == 8));
-HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 236));
+HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 264));
 
 #define PROTOCOL_KEY    (uint16_t)offsetof(tDataModel, nSafetyFlags) + \
                         (uint16_t)offsetof(tDataModel, nState) + \
@@ -95,8 +102,13 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, nRespirationPerMinute) + \
                         (uint16_t)offsetof(tDataModel, fInhalePressureTarget_mmH2O) + \
                         (uint16_t)offsetof(tDataModel, fExhalePressureTarget_mmH2O) + \
-                        (uint16_t)offsetof(tDataModel, fInhaleRatio) + \
-                        (uint16_t)offsetof(tDataModel, fExhaleRatio) + \
+                        (uint16_t)offsetof(tDataModel, fInhaleTime) + \
+                        (uint16_t)offsetof(tDataModel, fExhaleTime) + \
+                        (uint16_t)offsetof(tDataModel, fInhaleRampTime) + \
+                        (uint16_t)offsetof(tDataModel, fExhaleRampTime) + \
+                        (uint16_t)offsetof(tDataModel, fExhaleCheckPeepTime) + \
+                        (uint16_t)offsetof(tDataModel, fPeepLowLimit_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, fPeepHighLimit_mmH2O) + \
                         (uint16_t)offsetof(tDataModel, fPressure_mmH2O) + \
                         (uint16_t)offsetof(tDataModel, fPressure_Flow) + \
                         (uint16_t)offsetof(tDataModel, fPressureError) + \
@@ -105,17 +117,19 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, fD) + \
                         (uint16_t)offsetof(tDataModel, fPI) + \
                         (uint16_t)offsetof(tDataModel, nPWMPump) + \
+                        (uint16_t)offsetof(tDataModel, nTickFromStart) + \
                         (uint16_t)offsetof(tDataModel, nTickControl) + \
                         (uint16_t)offsetof(tDataModel, nTickCommunications) + \
                         (uint16_t)offsetof(tDataModel, nTickSensors) + \
                         (uint16_t)offsetof(tDataModel, nTickSetPoint) + \
+                        (uint16_t)offsetof(tDataModel, nTickStartExhale) + \
                         (uint16_t)offsetof(tDataModel, nTickRespiration) + \
                         (uint16_t)offsetof(tDataModel, nTickStabilization) + \
                         (uint16_t)offsetof(tDataModel, nTickWait) + \
                         (uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
                         (uint16_t)offsetof(tDataModel, nTerminator)
 
-HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4723));
+HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 6477));
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, PROTOCOL_KEY);
 // Uncomment to trace the size of tDataModel at compile-time:       HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tDataModel));
 

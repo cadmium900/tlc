@@ -78,8 +78,13 @@ struct tPacketCurve
     float breatheRate;
     float inhaleMmH2O;
     float exhaleMmH2O;
-    float inhaleRatio;
-    float exhaleRatio;
+    float inhaleTime;
+    float exhaleTime;
+    float inhaleRampTime;
+    float exhaleRampTime;
+    float exhaleCheckPeepTime;
+    float peepLowLimit_mmH2O;
+    float peepHighLimit_mmH2O;
 } __attribute__((packed));
 
 /// \enum ePacketCommand
@@ -168,8 +173,11 @@ enum eAlarm
     kAlarm_BatteryLow                   = (1<<4),   ///> Low battery voltage
     kAlarm_DisconnectedTube             = (1<<5),   ///> Disconnected respiration tube
     kAlarm_CloggedTube                  = (1<<6),   ///> Respiration tube is clogged
-    kAlarm_PeepLowWarning               = (1<<7),   ///> Peep too low warning
-    kAlarm_PeepHighWarning              = (1<<8)    ///> Peep too high warning
+
+    kAlarm_CriticalMask                 = 0xFF,
+
+    kAlarm_PeepLowWarning               = (1<<8),   ///> Peep too low warning
+    kAlarm_PeepHighWarning              = (1<<9)    ///> Peep too high warning
 };
 
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;

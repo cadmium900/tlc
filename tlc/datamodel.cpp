@@ -5,6 +5,7 @@
 /// \author     Frederic Lauzon
 /// \ingroup    datamodel
 #include "datamodel.h"
+#include "control.h"
 
 tDataModel gDataModel;
 
@@ -31,13 +32,16 @@ bool DataModel_Init()
     gDataModel.nControlMode             = kControlMode_PID;
     gDataModel.nTriggerMode             = kTriggerMode_Timed;
 
-    gDataModel.fInhalePressureTarget_mmH2O = 250.0f; // 25 cmH2O
-    gDataModel.fExhalePressureTarget_mmH2O = 50.0f;  // 5 cmH2O
-    gDataModel.fInhaleRatio                = 1.0f;    // 33%
-    gDataModel.fExhaleRatio                = 3.0f;
-
-    // TODO create the curve based on those settings (after proto is done).
-    // updateCurves(); // from serialportreader.h
+    gDataModel.fInhalePressureTarget_mmH2O  = 250.0f; // 25 cmH2O
+    gDataModel.fExhalePressureTarget_mmH2O  = 50.0f;  // 5 cmH2O
+    gDataModel.fInhaleTime                  = 1.0f;
+    gDataModel.fExhaleTime                  = 1.0f;
+    gDataModel.fInhaleRampTime              = 0.1f;
+    gDataModel.fExhaleRampTime              = 0.1f;
+    gDataModel.fExhaleCheckPeepTime         = 0.75f;
+    gDataModel.fPeepLowLimit_mmH2O          = 2.0f;
+    gDataModel.fPeepHighLimit_mmH2O         = 25.0f;
+    Control_SetCurveFromDataModel();
 
     gDataModel.nState = kState_Init;
     return true;
