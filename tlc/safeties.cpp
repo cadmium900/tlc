@@ -56,11 +56,16 @@ void Safeties_Process()
         if (gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O)
         {
             gDataModel.nSafetyFlags |= kAlarm_MaxPressureLimit;
+            if (gDataModel.fPressure_Flow <= gConfiguration.fMinPressureLimit_Flow)
+            {
+                gDataModel.nSafetyFlags |= kAlarm_CloggedTube;
+            }
         }
 
-        if (gDataModel.fPressure_mmH2O[1] <= gConfiguration.fMinPressureLimit_mmH2O)
+        if (gDataModel.fPressure_mmH2O[0] <= gConfiguration.fMinPressureLimit_mmH2O)
         {
             gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
+            gDataModel.nSafetyFlags |= kAlarm_DisconnectedTube;
         }
 
         if (fabs(fPressureDelta) >= gConfiguration.fMaxPressureDelta_mmH2O)

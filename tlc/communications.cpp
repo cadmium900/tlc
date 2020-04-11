@@ -261,6 +261,7 @@ static void ParseCommand(tPacketHeader* packet)
         {
             gConfiguration.nPressureSensorOffset[0] = gDataModel.nRawPressure[0];
             gConfiguration.nPressureSensorOffset[1] = gDataModel.nRawPressure[1];
+            gConfiguration.nPressureSensorOffset[2] = gDataModel.nRawPressure[2];
             SendControlAck(pReplyHeader, packet);
         }
         break;

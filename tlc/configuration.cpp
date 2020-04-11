@@ -74,6 +74,7 @@ bool Configuration_SetDefaults()
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
+    gConfiguration.fMinPressureLimit_Flow   = 0.1f;
     gConfiguration.fGainP                   = 50.0f;
     gConfiguration.fGainI                   = 0.00f;
     gConfiguration.fGainD                   = 0.0000f;

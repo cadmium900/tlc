@@ -224,6 +224,8 @@ static bool Exhale()
         return true;
     }
 
+    //*** During flat part of exhale curve, check for PeepLow and PeepHigh warnings
+
     gDataModel.fRequestPressure_mmH2O = gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.nCurveIndex];
     if ((millis() - gDataModel.nTickSetPoint) >= gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.nCurveIndex])
     {

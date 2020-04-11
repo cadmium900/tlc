@@ -30,7 +30,7 @@ enum eConsts
     kPeriodSensors              = 5,        ///> Period to call sensors loop in milliseconds
     kPeriodWarmup               = 1000,     ///> Period to warmup the system in milliseconds
     kPeriodStabilization        = 100,      ///> Stablization period between respiration cycles
-    kEEPROM_Version             = 1,        ///> EEPROM version must match this version for compatibility
+    kEEPROM_Version             = 2,        ///> EEPROM version must match this version for compatibility
     kMaxCurveCount              = 8,        ///> Maximum respiration curve index count
     kPacketId                   = 0xFEED    ///> Packet Identifier for communications
 };
@@ -166,6 +166,10 @@ enum eAlarm
     kAlarm_PressureSensorRedudancyFail  = (1<<2),   ///> Both pressure sensors report different readings
     kAlarm_InvalidConfiguration         = (1<<3),   ///> Loaded configuration is invalid
     kAlarm_BatteryLow                   = (1<<4),   ///> Low battery voltage
+    kAlarm_DisconnectedTube             = (1<<5),   ///> Disconnected respiration tube
+    kAlarm_CloggedTube                  = (1<<6),   ///> Respiration tube is clogged
+    kAlarm_PeepLowWarning               = (1<<7),   ///> Peep too low warning
+    kAlarm_PeepHighWarning              = (1<<8)    ///> Peep too high warning
 };
 
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
@@ -173,6 +177,8 @@ const float kMPX5010_MaxPressureDelta_mmH2O     = 90.0f;
 const float kMPX5010_Accuracy                   = 0.5f;
 const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
 const float kBatteryLevelGain                   = 5.0f;
+
+const float kMPXV7002DP_Sensitivity_mV_kPA      = 1000.0f;
 
 #define PIN_SERIAL_RX           0       // Serial port RX
 #define PIN_SERIAL_TX           1       // Serial port TX
@@ -187,12 +193,12 @@ const float kBatteryLevelGain                   = 5.0f;
 // this pin cannot be changes since we use the timer1 port
 #define PIN_OUT_PUMP1_PWM       9       // Ambu pump Cam PWM output
 
-#define PIN_OUT_BUZZER          5      // Buzzer signal output
+#define PIN_OUT_BUZZER          5       // Buzzer signal output
 
 #define PIN_PRESSURE0           A0      // Pressure readings from MPX pressure sensor
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor
 #define PIN_BATTERY             A2      // Battery voltage
-
+#define PIN_FLOWMETER           A3      // Flow meter reading from pressure sensor MPXV7002DPT
 #define PIN_LCD_KEYPAD_SDA      A4
 #define PIN_LCD_KEYPAD_SCL      A5
 

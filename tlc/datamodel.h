@@ -34,7 +34,7 @@ struct tDataModel
     eControlMode    nControlMode;           ///> Control mode of the pump
     eTriggerMode    nTriggerMode;           ///> Respiration trigger mode
     eCycleState     nCycleState;            ///> Respiration cycle state
-    uint8_t         nRawPressure[2];        ///> Raw read pressure from sensor
+    uint8_t         nRawPressure[3];        ///> Raw read pressure from sensor
     float           fBatteryLevel;          ///> Battery voltage level
 
     tPressureCurve  pInhaleCurve;           ///> Inhale curve descriptor
@@ -48,7 +48,8 @@ struct tDataModel
     float           fInhaleRatio;           ///> Inhale Ratio
     float           fExhaleRatio;           ///> Exhale Ratio
 
-    float           fPressure_mmH2O[2];     ///> Converted pressure, useable as cmH2O
+    float           fPressure_mmH2O[2];     ///> Converted pressure, useable as mmH2O
+    float           fPressure_Flow;         ///> Converted flow pressure
     float           fPressureError;         ///> Pressure error: readings vs set-point
     float           fP;                     ///> Control Proportional
     float           fI;                     ///> Control Integral
@@ -77,12 +78,11 @@ HXCOMPILATIONASSERT(assertEnumCycleStateSizeCheck,   (sizeof(eCycleState) == 2))
 
 // The protocol assumes that there is maximum 8 points in a curve
 HXCOMPILATIONASSERT(assertMaxCurveCountCheck,        (kMaxCurveCount == 8));
-HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 231));
-
+HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 236));
 
 #define PROTOCOL_KEY    (uint16_t)offsetof(tDataModel, nSafetyFlags) + \
-                        (uint16_t)offsetof(tDataModel, nRqState) + \
                         (uint16_t)offsetof(tDataModel, nState) + \
+                        (uint16_t)offsetof(tDataModel, nRqState) + \
                         (uint16_t)offsetof(tDataModel, nControlMode) + \
                         (uint16_t)offsetof(tDataModel, nTriggerMode) + \
                         (uint16_t)offsetof(tDataModel, nCycleState) + \
@@ -98,6 +98,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, fInhaleRatio) + \
                         (uint16_t)offsetof(tDataModel, fExhaleRatio) + \
                         (uint16_t)offsetof(tDataModel, fPressure_mmH2O) + \
+                        (uint16_t)offsetof(tDataModel, fPressure_Flow) + \
                         (uint16_t)offsetof(tDataModel, fPressureError) + \
                         (uint16_t)offsetof(tDataModel, fP) + \
                         (uint16_t)offsetof(tDataModel, fI) + \
@@ -114,7 +115,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
                         (uint16_t)offsetof(tDataModel, nTerminator)
 
-HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4459));
+HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 4723));
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, PROTOCOL_KEY);
 // Uncomment to trace the size of tDataModel at compile-time:       HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tDataModel));
 

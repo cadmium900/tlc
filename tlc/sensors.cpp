@@ -33,23 +33,18 @@ void Sensors_Process()
 
     gDataModel.nRawPressure[0] = analogRead(PIN_PRESSURE0);
     gDataModel.nRawPressure[1] = analogRead(PIN_PRESSURE1);
+    gDataModel.nRawPressure[2] = analogRead(PIN_FLOWMETER);
 
-    if (gDataModel.nRawPressure[0] > gConfiguration.nPressureSensorOffset[0])
+    for (int a = 0; a < 3; ++a)
     {
-        gDataModel.nRawPressure[0] -= gConfiguration.nPressureSensorOffset[0];
-    }
-    else
-    {
-        gDataModel.nRawPressure[0] = 0;
-    }
-
-    if (gDataModel.nRawPressure[1] > gConfiguration.nPressureSensorOffset[1])
-    {
-        gDataModel.nRawPressure[1] -= gConfiguration.nPressureSensorOffset[1];
-    }
-    else
-    {
-        gDataModel.nRawPressure[1] = 0;
+        if (gDataModel.nRawPressure[a] > gConfiguration.nPressureSensorOffset[a])
+        {
+            gDataModel.nRawPressure[a] -= gConfiguration.nPressureSensorOffset[a];
+        }
+        else
+        {
+            gDataModel.nRawPressure[a] = 0;
+        }
     }
 
     // Debug code for automatically setting pressure at Zero on boot
@@ -73,6 +68,9 @@ void Sensors_Process()
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
+    mV      = (float)gDataModel.nRawPressure[2] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    gDataModel.fPressure_Flow = mV * (1.0f / kMPXV7002DP_Sensitivity_mV_kPA);
+
 #if ENABLE_LCD
     char szPressure[6];
     // 4 is mininum width, 2 is precision; float value is copied onto str_temp
@@ -80,6 +78,5 @@ void Sensors_Process()
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
 #endif
 
-    //gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
-    gDataModel.fBatteryLevel = 12.1f;
+    gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
 }

@@ -14,11 +14,12 @@
 struct tConfiguration
 {
     uint8_t     nVersion;                   ///> Configuration structure version
-    uint16_t    nPressureSensorOffset[2];   ///> Offset when pressure sensor is at atmosphere readings
+    uint16_t    nPressureSensorOffset[3];   ///> Offset when pressure sensor is at atmosphere readings
     float       fMinBatteryLevel;           ///> Minimum battery level for alarm
     float       fMaxPressureLimit_mmH2O;    ///> Max allowed pressure limit
     float       fMinPressureLimit_mmH2O;    ///> Min allowed pressure limit
     float       fMaxPressureDelta_mmH2O;    ///> Maximum allowed pressure delta between redundant readings
+    float       fMinPressureLimit_Flow;     ///> Minimum pressure on pressure (flow) sensor to detect a problem
     float       fGainP;                     ///> Control gain P
     float       fGainI;                     ///> Control gain I
     float       fGainD;                     ///> Control gain D
@@ -39,6 +40,7 @@ HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration)
                         (uint16_t)offsetof(tConfiguration, fMaxPressureLimit_mmH2O) + \
                         (uint16_t)offsetof(tConfiguration, fMinPressureLimit_mmH2O) + \
                         (uint16_t)offsetof(tConfiguration, fMaxPressureDelta_mmH2O) + \
+                        (uint16_t)offsetof(tConfiguration, fMinPressureLimit_Flow) + \
                         (uint16_t)offsetof(tConfiguration, fGainP) + \
                         (uint16_t)offsetof(tConfiguration, fGainI) + \
                         (uint16_t)offsetof(tConfiguration, fGainD) + \
@@ -50,8 +52,7 @@ HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration)
                         (uint16_t)offsetof(tConfiguration, nServoExhaleCloseAngle) + \
                         (uint16_t)offsetof(tConfiguration, nCRC)
 
-HXCOMPILATIONASSERT(assertCheckConfigurationProtocolKey, (CFGPROTOCOL_KEY == 429));
-
+HXCOMPILATIONASSERT(assertCheckConfigurationProtocolKey, (CFGPROTOCOL_KEY == 520));
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, CFGPROTOCOL_KEY);
 // Uncomment to trace the size of tConfiguration at compile-time:   HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tConfiguration));
 
