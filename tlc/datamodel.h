@@ -34,7 +34,7 @@ struct tDataModel
     eControlMode    nControlMode;           ///> Control mode of the pump
     eTriggerMode    nTriggerMode;           ///> Respiration trigger mode
     eCycleState     nCycleState;            ///> Respiration cycle state
-    uint8_t         nRawPressure[3];        ///> Raw read pressure from sensor
+    int16_t         nRawPressure[3];        ///> Raw read pressure from sensor
     float           fBatteryLevel;          ///> Battery voltage level
 
     tPressureCurve  pInhaleCurve;           ///> Inhale curve descriptor
@@ -85,7 +85,7 @@ HXCOMPILATIONASSERT(assertEnumCycleStateSizeCheck,   (sizeof(eCycleState) == 2))
 
 // The protocol assumes that there is maximum 8 points in a curve
 HXCOMPILATIONASSERT(assertMaxCurveCountCheck,        (kMaxCurveCount == 8));
-HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 264));
+HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerminator) == 267));
 
 #define PROTOCOL_KEY    (uint16_t)offsetof(tDataModel, nSafetyFlags) + \
                         (uint16_t)offsetof(tDataModel, nState) + \
@@ -129,7 +129,8 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, nTickLcdKeypad) + \
                         (uint16_t)offsetof(tDataModel, nTerminator)
 
-HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 6477));
+HXCOMPILATIONASSERT(assertCheckProtocolKey, (PROTOCOL_KEY == 6579));
+
 // Uncomment to trace the value of protocol_key at compile-time:    HXCOMPILATIONTRACE(stopCompileCheckSize, PROTOCOL_KEY);
 // Uncomment to trace the size of tDataModel at compile-time:       HXCOMPILATIONTRACE(stopCompileCheckSize, sizeof(tDataModel));
 
