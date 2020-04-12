@@ -384,17 +384,30 @@ static bool ComputeRespirationSetPoint()
     return true;
 }
 
+static void ResetRespirationState()
+{
+    gDataModel.nTickRespiration         = millis(); // Respiration cycle start tick. Used to compute
+    gDataModel.nCycleState              = kCycleState_WaitTrigger;
+    gDataModel.fI                       = 0.0f;
+    gDataModel.fPI                      = 0.0f;
+
+    gDataModel.nCurveIndex              = 0;
+    gDataModel.nTickSetPoint            = 0;
+    gDataModel.nPWMPump                 = 0;
+    gDataModel.fRequestPressure_mmH2O   = 0.0f;
+}
+
 void Control_Process()
 {
     if (gDataModel.nRqState != kRqState_Start || gDataModel.nState != kState_Process)
     {
-        gDataModel.nCycleState = kCycleState_WaitTrigger;
-        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
-        gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
+        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);        
         gDataModel.nTickFromStart = 0;
         gTickStart = millis();
                 
         pumpServo.write(750);
+
+        ResetRespirationState();
         return;
     }
 
