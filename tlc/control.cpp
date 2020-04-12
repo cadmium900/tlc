@@ -97,7 +97,7 @@ void Control_PID()
     gDataModel.fPressureError = gDataModel.fRequestPressure_mmH2O - gDataModel.fPressure_mmH2O[0];
     gDataModel.fP = gDataModel.fPressureError * gConfiguration.fGainP;
 
-    gDataModel.fI += gDataModel.fPressureError;
+    gDataModel.fI += (gDataModel.fPressureError * gConfiguration.fGainI);
     if (gDataModel.fI > gConfiguration.fILimit)
     {
         gDataModel.fI = gConfiguration.fILimit;
