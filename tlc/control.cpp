@@ -32,21 +32,56 @@ bool Control_SetCurveFromDataModel()
 {
     if (gDataModel.nRespirationPerMinute > 0)
     {        
-        //*** Curve ramp time not implemented yet
         float fInhaleTime = gDataModel.fInhaleTime; 
         float fExhaleTime = gDataModel.fExhaleTime; 
 
         // Inhale curve
-        uint32_t nPointTickMs = (uint32_t)fInhaleTime * 1000.0f;
-        gDataModel.pInhaleCurve.nCount = 1;
-        gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
-        gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = nPointTickMs;
+        uint8_t  rampPointCount = kMaxCurveCount-1;
+        uint32_t nPointTickMs   = (uint32_t)((gDataModel.fInhaleRampTime * 1000.0f) / (float)rampPointCount);
+        gDataModel.pInhaleCurve.nCount = kMaxCurveCount;
+        
+        // Generate inhale ramp time (all points minus last target point)
+        float accumulatorRatio = (1.0f / (float)rampPointCount) * gDataModel.fInhalePressureTarget_mmH2O;
+        float acc = 0.0f;
+        for (int a = 0; a < rampPointCount; ++a)
+        {
+            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+            acc += accumulatorRatio;
+            
+            // Clamp to maximum inhale pressure target            
+            if (acc > gDataModel.fInhalePressureTarget_mmH2O)
+            {
+                acc = gDataModel.fInhalePressureTarget_mmH2O;
+            }
+        }
+
+        // Last inhale point will last for the remaining inhaleTime
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[gDataModel.pInhaleCurve.nCount-1]  = gDataModel.fInhalePressureTarget_mmH2O;
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[gDataModel.pInhaleCurve.nCount-1] = (uint32_t)((fInhaleTime - gDataModel.fInhaleRampTime) * 1000.0f);
 
         // Compute exhale ramp time (all points minus last target point)
-        nPointTickMs   = (uint32_t)fExhaleTime * 1000.0f;
-        gDataModel.pExhaleCurve.nCount = 1;
-        gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fExhalePressureTarget_mmH2O;
-        gDataModel.pExhaleCurve.nSetPoint_TickMs[0] = nPointTickMs;
+        rampPointCount = kMaxCurveCount-1;        
+        nPointTickMs   = (uint16_t)((gDataModel.fExhaleRampTime * 1000.0f) / (float)rampPointCount);
+        gDataModel.pExhaleCurve.nCount = kMaxCurveCount;
+        accumulatorRatio = (1.0f / (float)rampPointCount) * (gDataModel.fInhalePressureTarget_mmH2O-gDataModel.fExhalePressureTarget_mmH2O);
+        acc = gDataModel.fInhalePressureTarget_mmH2O;
+        for (int a = 0; a < rampPointCount; ++a)
+        {
+            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+            acc -= accumulatorRatio;
+            
+            // Clamp to maximum inhale pressure target            
+            if (acc < gDataModel.fExhalePressureTarget_mmH2O)
+            {
+                acc = gDataModel.fExhalePressureTarget_mmH2O;
+            }
+        }
+
+        // Last exhale point will last for the remaining exhaleTime
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.pExhaleCurve.nCount-1]  = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.pExhaleCurve.nCount-1] = (uint32_t)((fExhaleTime - gDataModel.fExhaleRampTime) * 1000.0f);
 
         return true;
     }

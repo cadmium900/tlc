@@ -95,6 +95,11 @@ void Safeties_Process()
             if (gDataModel.nRqState == kRqState_Start)
             {
                 uint32_t nCycleTimeMs = 10000;
+                if (gDataModel.nRespirationPerMinute > 0)
+                {
+                    nCycleTimeMs = (uint32_t)(60000.0f / (float)gDataModel.nRespirationPerMinute);
+                    nCycleTimeMs *= 2; // Check low pressure for 2 respiration cycles
+                }
                 if ((millis() - nMinPressureOkTick) > nCycleTimeMs)
                 {
                     gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
