@@ -85,7 +85,7 @@ void Sensors_Process()
     fBatteryAvg += (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
     ++nBatteryAvgCnt;
 
-    if (nBatteryAvgCnt >= 300)
+    if (nBatteryAvgCnt >= 3000)
     {
         gDataModel.fBatteryLevel    = fBatteryAvg / (float)nBatteryAvgCnt;
         fBatteryAvg                 = 0.0f;
