@@ -39,15 +39,20 @@ void Sensors_Process()
     gDataModel.nRawPressure[1] = analogRead(PIN_PRESSURE1);
     gDataModel.nRawPressure[2] = analogRead(PIN_FLOWMETER);
 
+    int16_t nRaw[3];
+    nRaw[0] = gDataModel.nRawPressure[0];
+    nRaw[1] = gDataModel.nRawPressure[1];
+    nRaw[2] = gDataModel.nRawPressure[2];
+
     for (int a = 0; a < 3; ++a)
     {
-        if (gDataModel.nRawPressure[a] > gConfiguration.nPressureSensorOffset[a])
+        if (nRaw[a] > gConfiguration.nPressureSensorOffset[a])
         {
-            gDataModel.nRawPressure[a] -= gConfiguration.nPressureSensorOffset[a];
+            nRaw[a] -= gConfiguration.nPressureSensorOffset[a];
         }
         else
         {
-            gDataModel.nRawPressure[a] = 0;
+            nRaw[a] = 0;
         }
     }
 
@@ -61,18 +66,18 @@ void Sensors_Process()
 #endif
 
     // Transfer function for raw pressure.
-    float mV    = (float)gDataModel.nRawPressure[0] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    float mV    = (float)nRaw[0] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     float mmH2O = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[0] = mmH2O;
 
     // Redundant pressure reading, for safeties
-    mV      = (float)gDataModel.nRawPressure[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    mV      = (float)nRaw[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     mmH2O   = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
-    mV      = (float)gDataModel.nRawPressure[2] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    mV      = (float)nRaw[2] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     gDataModel.fPressure_Flow = mV * (1.0f / kMPXV7002DP_Sensitivity_mV_kPA);
 
 #if ENABLE_LCD

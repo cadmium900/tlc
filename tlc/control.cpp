@@ -223,6 +223,7 @@ static bool Exhale()
     }
 
     // During flat part of exhale curve, check for PeepLow and PeepHigh warnings
+#if 0 //*** To configure correctly    
     if ((millis() - gDataModel.nTickStartExhale) >= (uint32_t)(gDataModel.fExhaleCheckPeepTime * 1000.0f))
     {           
         if (gDataModel.fPressure_mmH2O[0] < gDataModel.fPeepLowLimit_mmH2O)
@@ -243,6 +244,7 @@ static bool Exhale()
             gDataModel.nSafetyFlags &= ~kAlarm_PeepHighWarning;
         }
     }
+#endif
 
     gDataModel.fRequestPressure_mmH2O = gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.nCurveIndex];
     if ((millis() - gDataModel.nTickSetPoint) >= gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.nCurveIndex])

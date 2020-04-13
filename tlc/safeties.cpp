@@ -53,8 +53,17 @@ void Safeties_Process()
 {
     if (gDataModel.nState != kState_Process)
     {
+        nMinPressureOkTick = millis();
+        nMaxPressureOkTick = millis();
         return;
     }
+
+    if (gDataModel.nRqState != kRqState_Start)
+    {
+        nMinPressureOkTick = millis();
+        nMaxPressureOkTick = millis();
+    }
+    
 
     // If any safety issue, set bCritical in global safeties structure
     if (gSafeties.bEnabled)
@@ -85,7 +94,7 @@ void Safeties_Process()
         {
             if (gDataModel.nRqState == kRqState_Start)
             {
-                uint32_t nCycleTimeMs = (gDataModel.fInhaleTime + gDataModel.fExhaleTime) * 2000.0f;
+                uint32_t nCycleTimeMs = 10000;
                 if ((millis() - nMinPressureOkTick) > nCycleTimeMs)
                 {
                     gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
@@ -94,10 +103,10 @@ void Safeties_Process()
             }
         }
         else
-        {
+        {            
             nMinPressureOkTick = millis();
         }
-        
+               
 
         if (fabs(fPressureDelta) >= gConfiguration.fMaxPressureDelta_mmH2O)
         {
