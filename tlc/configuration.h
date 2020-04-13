@@ -27,8 +27,8 @@ struct tConfiguration
     float       fPILimit;                   ///> Proportional+Integral error limit
     float       fControlTransfer;           ///> Control transfer from adjusted errors to pwm
     float       fPatientTrigger_mmH2O;      ///> Patient triggers respiration when this value is reached (In TriggerMode Patient or semi automatic)
-    uint16_t    nServoExhaleOpenAngle;      ///> Angle in degree (0..180) when exhale servo valve is open
-    uint16_t    nServoExhaleCloseAngle;     ///> Angle in degree (0..180) when exhale servo valve is close
+    uint16_t    nServoExhaleOpenAngle;      ///> Angle in pwm time (750..2250) when exhale servo valve is open
+    uint16_t    nServoExhaleCloseAngle;     ///> Angle in pwm time (750..2250) when exhale servo valve is close
     uint32_t    nCRC;                       ///> Configuration CRC check
 } __attribute__((packed));
 extern tConfiguration gConfiguration;
