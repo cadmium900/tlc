@@ -23,19 +23,17 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdMsg, "NVM Fail");
 #endif
-        Serial.println("DEBUG: Invalid config, revert to default");
         Configuration_SetDefaults();
         Configuration_Write();
     }
     else
     {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdMsg, "NVM Success");
 #endif
-        Serial.println("DEBUG: Config loaded");
     }
 #endif
 
@@ -76,13 +74,14 @@ bool Configuration_SetDefaults()
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
-    gConfiguration.fGainP                   = 50.0f;
-    gConfiguration.fGainI                   = 0.00f;
-    gConfiguration.fGainD                   = 0.0000f;
-    gConfiguration.fILimit                  = 5.0f;
+    gConfiguration.fMinPressureLimit_Flow   = 0.1f;
+    gConfiguration.fGainP                   = 8.5f;
+    gConfiguration.fGainI                   = 0.01f;
+    gConfiguration.fGainD                   = 0.00f;
+    gConfiguration.fILimit                  = 700.0f;
     gConfiguration.fPILimit                 = 1000.0f;
     gConfiguration.fControlTransfer         = 1.5f;
-    gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
+    gConfiguration.fPatientTrigger_mmH2O    = 20.0f;
     gConfiguration.nServoExhaleOpenAngle    = 1500;
     gConfiguration.nServoExhaleCloseAngle   = 750;
     gConfiguration.nCRC                     = 0; // Clear CRC for computation
@@ -106,12 +105,6 @@ bool Configuration_Read()
     uint32_t cmpCRC = CRC32(pConfiguration, sizeof(tConfiguration));
 
     bool ret = (oemCRC == cmpCRC) && (gConfiguration.nVersion == kEEPROM_Version);
-    if(ret){
-        Serial.println("DEBUG: Configuration_Read success");
-    }else{
-        Serial.println("DEBUG: Configuration_Read failed");
-    }   
-
     return ret;
 }
 
@@ -130,7 +123,5 @@ bool Configuration_Write()
         EEPROM[a] = pConfiguration[a];
     }
 
-    Serial.println("DEBUG: Configuration_Write success (?)");
-    
     return true;
 }

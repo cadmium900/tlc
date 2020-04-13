@@ -11,9 +11,13 @@
 
 #define AUTO_PRESSURE_CALIB_AT_BOOT     0
 
+static float    fBatteryAvg     = 0.0f;
+static uint32_t nBatteryAvgCnt  = 0;
+
 // Initialize sensor devices
 bool Sensors_Init()
 {
+    gDataModel.fBatteryLevel = 12.0f;
     return true;
 }
 
@@ -33,23 +37,23 @@ void Sensors_Process()
 
     gDataModel.nRawPressure[0] = analogRead(PIN_PRESSURE0);
     gDataModel.nRawPressure[1] = analogRead(PIN_PRESSURE1);
+    gDataModel.nRawPressure[2] = analogRead(PIN_FLOWMETER);
 
-    if (gDataModel.nRawPressure[0] > gConfiguration.nPressureSensorOffset[0])
-    {
-      gDataModel.nRawPressure[0] -= gConfiguration.nPressureSensorOffset[0];
-    }
-    else
-    {
-      gDataModel.nRawPressure[0] = 0;
-    }
+    int16_t nRaw[3];
+    nRaw[0] = gDataModel.nRawPressure[0];
+    nRaw[1] = gDataModel.nRawPressure[1];
+    nRaw[2] = gDataModel.nRawPressure[2];
 
-    if (gDataModel.nRawPressure[1] > gConfiguration.nPressureSensorOffset[1])
+    for (int a = 0; a < 3; ++a)
     {
-      gDataModel.nRawPressure[1] -= gConfiguration.nPressureSensorOffset[1];
-    }
-    else
-    {
-      gDataModel.nRawPressure[1] = 0;
+        if (nRaw[a] > gConfiguration.nPressureSensorOffset[a])
+        {
+            nRaw[a] -= gConfiguration.nPressureSensorOffset[a];
+        }
+        else
+        {
+            nRaw[a] = 0;
+        }
     }
 
     // Debug code for automatically setting pressure at Zero on boot
@@ -62,35 +66,34 @@ void Sensors_Process()
 #endif
 
     // Transfer function for raw pressure.
-    float mV    = (float)gDataModel.nRawPressure[0] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    float mV    = (float)nRaw[0] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     float mmH2O = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[0] = mmH2O;
 
-   /* static uint32_t nLastPrintTick = 0;
-    if ((millis() - nLastPrintTick) >= 50)
-    {
-    char szDbgPressure[6];
-    // 4 is mininum width, 2 is precision; float value is copied onto str_temp
-    dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szDbgPressure);
-    Serial.print("DEBUG: ");
-    Serial.print(szDbgPressure);
-    Serial.println("mmH2O");
-    nLastPrintTick = millis();
-    }*/
-    
     // Redundant pressure reading, for safeties
-    mV      = (float)gDataModel.nRawPressure[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    mV      = (float)nRaw[1] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
     mmH2O   = mV * (1.0f / kMPX5010_Sensitivity_mV_mmH2O);
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
-#ifdef ENABLE_LCD
+    mV      = (float)nRaw[2] * (1.0f/1024.0f) * 5000.0f; // Voltage in millivolt measured on ADC
+    gDataModel.fPressure_Flow = mV * (1.0f / kMPXV7002DP_Sensitivity_mV_kPA);
+
+#if ENABLE_LCD
     char szPressure[6];
     // 4 is mininum width, 2 is precision; float value is copied onto str_temp
     dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szPressure);
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
 #endif
-    //gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
-    gDataModel.fBatteryLevel = 12.1f;
+
+    fBatteryAvg += (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
+    ++nBatteryAvgCnt;
+
+    if (nBatteryAvgCnt >= 3000)
+    {
+        gDataModel.fBatteryLevel    = fBatteryAvg / (float)nBatteryAvgCnt;
+        fBatteryAvg                 = 0.0f;
+        nBatteryAvgCnt              = 0;
+    }
 }

@@ -33,7 +33,7 @@ void setup()
 
     Safeties_Init();
 
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
     LcdKeypad_Init();
 #endif
         
@@ -43,8 +43,7 @@ void setup()
     if (!cfgSuccess)
     {
         gSafeties.bEnabled              = true;
-        gSafeties.bConfigurationInvalid = true; 
-        Serial.println("DEBUG: loading failed.");
+        gSafeties.bConfigurationInvalid = true;         
     }
         
     gDataModel.nState   = kState_Warmup;
@@ -118,7 +117,7 @@ void loop()
 		Control_Process();        
     }
 
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
     if ((millis() - gDataModel.nTickLcdKeypad) >= kPeriodLcdKeypad)
     {
         gDataModel.nTickLcdKeypad = millis();

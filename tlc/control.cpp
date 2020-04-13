@@ -13,18 +13,82 @@
 
 ServoTimer2 exhaleValveServo;
 ServoTimer2 pumpServo;
+uint32_t gTickStart = 0;
 
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
+    gDataModel.nTickFromStart = millis();
     exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
     pumpServo.write(750);  // DE 750 a 2250
-    
-    gDataModel.bStartFlag = false;
 
+    gDataModel.nRqState = kRqState_Stop;
+    
     return true;
 }
+
+bool Control_SetCurveFromDataModel()
+{
+    if (gDataModel.nRespirationPerMinute > 0)
+    {        
+        float fInhaleTime = gDataModel.fInhaleTime; 
+        float fExhaleTime = gDataModel.fExhaleTime; 
+
+        // Inhale curve
+        uint8_t  rampPointCount = kMaxCurveCount-1;
+        uint32_t nPointTickMs   = (uint32_t)((gDataModel.fInhaleRampTime * 1000.0f) / (float)rampPointCount);
+        gDataModel.pInhaleCurve.nCount = kMaxCurveCount;
+        
+        // Generate inhale ramp time (all points minus last target point)
+        float accumulatorRatio = (1.0f / (float)rampPointCount) * gDataModel.fInhalePressureTarget_mmH2O;
+        float acc = 0.0f;
+        for (int a = 0; a < rampPointCount; ++a)
+        {
+            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+            acc += accumulatorRatio;
+            
+            // Clamp to maximum inhale pressure target            
+            if (acc > gDataModel.fInhalePressureTarget_mmH2O)
+            {
+                acc = gDataModel.fInhalePressureTarget_mmH2O;
+            }
+        }
+
+        // Last inhale point will last for the remaining inhaleTime
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[gDataModel.pInhaleCurve.nCount-1]  = gDataModel.fInhalePressureTarget_mmH2O;
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[gDataModel.pInhaleCurve.nCount-1] = (uint32_t)((fInhaleTime - gDataModel.fInhaleRampTime) * 1000.0f);
+
+        // Compute exhale ramp time (all points minus last target point)
+        rampPointCount = kMaxCurveCount-1;        
+        nPointTickMs   = (uint16_t)((gDataModel.fExhaleRampTime * 1000.0f) / (float)rampPointCount);
+        gDataModel.pExhaleCurve.nCount = kMaxCurveCount;
+        accumulatorRatio = (1.0f / (float)rampPointCount) * (gDataModel.fInhalePressureTarget_mmH2O-gDataModel.fExhalePressureTarget_mmH2O);
+        acc = gDataModel.fInhalePressureTarget_mmH2O;
+        for (int a = 0; a < rampPointCount; ++a)
+        {
+            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+            acc -= accumulatorRatio;
+            
+            // Clamp to maximum inhale pressure target            
+            if (acc < gDataModel.fExhalePressureTarget_mmH2O)
+            {
+                acc = gDataModel.fExhalePressureTarget_mmH2O;
+            }
+        }
+
+        // Last exhale point will last for the remaining exhaleTime
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.pExhaleCurve.nCount-1]  = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.pExhaleCurve.nCount-1] = (uint32_t)((fExhaleTime - gDataModel.fExhaleRampTime) * 1000.0f);
+
+        return true;
+    }
+
+    gSafeties.bConfigurationInvalid = true;
+    return false;
+ }
 
 // Control using a PID with pressure feedback
 void Control_PID()
@@ -32,7 +96,7 @@ void Control_PID()
     gDataModel.fPressureError = gDataModel.fRequestPressure_mmH2O - gDataModel.fPressure_mmH2O[0];
     gDataModel.fP = gDataModel.fPressureError * gConfiguration.fGainP;
 
-    gDataModel.fI += gDataModel.fPressureError;
+    gDataModel.fI += (gDataModel.fPressureError * gConfiguration.fGainI);
     if (gDataModel.fI > gConfiguration.fILimit)
     {
         gDataModel.fI = gConfiguration.fILimit;
@@ -54,7 +118,6 @@ void Control_PID()
 
     // Note: Derivative not used, not necessary for now.
 
-    //*** Validate how we manage too much pressure
     if (gDataModel.fPI < 0)
     {
         gDataModel.fPI = 0;
@@ -92,7 +155,6 @@ static bool CheckTrigger()
 
     default:
         // Invalid setting
-        Serial.println("DEBUG: Invalid trigger mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         return false;
@@ -171,6 +233,7 @@ static bool StartExhaleCycle()
 
     // Start a new inhale cycle
     gDataModel.nCurveIndex              = 0;
+    gDataModel.nTickStartExhale         = millis();
     gDataModel.nTickSetPoint            = millis();
     gDataModel.fRequestPressure_mmH2O   = gDataModel.pExhaleCurve.fSetPoint_mmH2O[0];
 
@@ -193,6 +256,30 @@ static bool Exhale()
     {
         return true;
     }
+
+    // During flat part of exhale curve, check for PeepLow and PeepHigh warnings
+#if 0 //*** To configure correctly    
+    if ((millis() - gDataModel.nTickStartExhale) >= (uint32_t)(gDataModel.fExhaleCheckPeepTime * 1000.0f))
+    {           
+        if (gDataModel.fPressure_mmH2O[0] < gDataModel.fPeepLowLimit_mmH2O)
+        {
+            gDataModel.nSafetyFlags |= kAlarm_PeepLowWarning;
+        }
+        else
+        {
+            gDataModel.nSafetyFlags &= ~kAlarm_PeepLowWarning;
+        }
+
+        if (gDataModel.fPressure_mmH2O[0] > gDataModel.fPeepHighLimit_mmH2O)
+        {
+            gDataModel.nSafetyFlags |= kAlarm_PeepHighWarning;
+        }
+        else
+        {
+            gDataModel.nSafetyFlags &= ~kAlarm_PeepHighWarning;
+        }
+    }
+#endif
 
     gDataModel.fRequestPressure_mmH2O = gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.nCurveIndex];
     if ((millis() - gDataModel.nTickSetPoint) >= gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.nCurveIndex])
@@ -217,7 +304,7 @@ static bool ComputeRespirationSetPoint()
     switch (gDataModel.nCycleState)
     {
     case kCycleState_WaitTrigger:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "Trigger   ");
 #endif
         if (CheckTrigger())
@@ -237,7 +324,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Inhale:
         {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
             sprintf(gLcdDetail, "Inhale  ");
 #endif
             bool inhaleFinished = Inhale();
@@ -259,7 +346,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Exhale:
         {
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
             sprintf(gLcdDetail, "Exhale   ");
 #endif
             bool exhaleFinished = Exhale();
@@ -274,7 +361,7 @@ static bool ComputeRespirationSetPoint()
         break;
 
     case kCycleState_Stabilization:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "Stabil   ");
 #endif
         // Pressure Stabilization between cycles
@@ -285,11 +372,10 @@ static bool ComputeRespirationSetPoint()
         break;
 
     default:
-#ifdef ENABLE_LCD
+#if ENABLE_LCD
         sprintf(gLcdDetail, "N/A   ");
 #endif
         // Invalid setting
-        Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         gDataModel.nCycleState          = kCycleState_WaitTrigger;
@@ -299,18 +385,35 @@ static bool ComputeRespirationSetPoint()
     return true;
 }
 
+static void ResetRespirationState()
+{
+    gDataModel.nTickRespiration         = millis(); // Respiration cycle start tick. Used to compute
+    gDataModel.nCycleState              = kCycleState_WaitTrigger;
+    gDataModel.fI                       = 0.0f;
+    gDataModel.fPI                      = 0.0f;
+
+    gDataModel.nCurveIndex              = 0;
+    gDataModel.nTickSetPoint            = 0;
+    gDataModel.nPWMPump                 = 0;
+    gDataModel.fRequestPressure_mmH2O   = 0.0f;
+}
+
 void Control_Process()
 {
-    if (!gDataModel.bStartFlag || gDataModel.nState != kState_Process)
+    if (gDataModel.nRqState != kRqState_Start || gDataModel.nState != kState_Process)
     {
-        gDataModel.nCycleState = kCycleState_WaitTrigger;
-        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
-        gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
-        
+        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);        
+        gDataModel.nTickFromStart = 0;
+        gTickStart = millis();
+                
         pumpServo.write(750);
+
+        ResetRespirationState();
         return;
     }
 
+    gDataModel.nTickFromStart = millis() - gTickStart;
+    
     // Process pressure feedback to match current pressure set point
     switch (gDataModel.nControlMode)
     {
@@ -328,7 +431,6 @@ void Control_Process()
 
     default:
         // Unknown control mode, raise error.
-        Serial.println("DEBUG: Unknown control mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         break;
@@ -338,7 +440,7 @@ void Control_Process()
     uint16_t pwm = gDataModel.nPWMPump + 750;
     if (pwm > 2250)
     {
-      pwm = 2250;
+        pwm = 2250;
     }
     pumpServo.write(pwm);
 }
