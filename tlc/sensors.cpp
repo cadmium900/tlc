@@ -11,9 +11,13 @@
 
 #define AUTO_PRESSURE_CALIB_AT_BOOT     0
 
+static float    fBatteryAvg     = 0.0f;
+static uint32_t nBatteryAvgCnt  = 0;
+
 // Initialize sensor devices
 bool Sensors_Init()
 {
+    gDataModel.fBatteryLevel = 12.0f;
     return true;
 }
 
@@ -78,5 +82,13 @@ void Sensors_Process()
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
 #endif
 
-    gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
+    fBatteryAvg += (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
+    ++nBatteryAvgCnt;
+
+    if (nBatteryAvgCnt >= 300)
+    {
+        gDataModel.fBatteryLevel    = fBatteryAvg / (float)nBatteryAvgCnt;
+        fBatteryAvg                 = 0.0f;
+        nBatteryAvgCnt              = 0;
+    }
 }
