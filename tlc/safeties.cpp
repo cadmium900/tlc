@@ -9,6 +9,12 @@
 #include "datamodel.h"
 
 tSafeties gSafeties;
+static uint32_t nMinPressureOkTick = 0;
+static uint32_t nMaxPressureOkTick = 0;
+enum eSafetiesConsts
+{
+    kMaxPressureTimeout = 300
+};
 
 // Initialize safeties
 bool Safeties_Init()
@@ -17,6 +23,9 @@ bool Safeties_Init()
     gSafeties.bEnabled              = false;
     gSafeties.bCritical             = false;
     gSafeties.bConfigurationInvalid = false;
+    
+    nMinPressureOkTick              = millis();
+    nMaxPressureOkTick              = millis();
 
     return true;
 }
@@ -55,18 +64,40 @@ void Safeties_Process()
         gDataModel.nSafetyFlags &= ~kAlarm_CriticalMask;
         if (gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O)
         {
-            gDataModel.nSafetyFlags |= kAlarm_MaxPressureLimit;
-            if (gDataModel.fPressure_Flow <= gConfiguration.fMinPressureLimit_Flow)
+            if (gDataModel.nRqState == kRqState_Start)
             {
-                gDataModel.nSafetyFlags |= kAlarm_CloggedTube;
+                if ((millis() - nMaxPressureOkTick) > kMaxPressureTimeout)
+                {
+                    gDataModel.nSafetyFlags |= kAlarm_MaxPressureLimit;
+                    if (gDataModel.fPressure_Flow <= gConfiguration.fMinPressureLimit_Flow)
+                    {
+                        gDataModel.nSafetyFlags |= kAlarm_CloggedTube;
+                    }
+                }
             }
         }
-
+        else
+        {
+            nMaxPressureOkTick = millis();
+        }
+        
         if (gDataModel.fPressure_mmH2O[0] <= gConfiguration.fMinPressureLimit_mmH2O)
         {
-            gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
-            gDataModel.nSafetyFlags |= kAlarm_DisconnectedTube;
+            if (gDataModel.nRqState == kRqState_Start)
+            {
+                uint32_t nCycleTimeMs = (gDataModel.fInhaleTime + gDataModel.fExhaleTime) * 2000.0f;
+                if ((millis() - nMinPressureOkTick) > nCycleTimeMs)
+                {
+                    gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
+                    gDataModel.nSafetyFlags |= kAlarm_DisconnectedTube;
+                }
+            }
         }
+        else
+        {
+            nMinPressureOkTick = millis();
+        }
+        
 
         if (fabs(fPressureDelta) >= gConfiguration.fMaxPressureDelta_mmH2O)
         {
