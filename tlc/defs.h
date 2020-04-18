@@ -30,7 +30,7 @@ enum eConsts
     kPeriodSensors              = 5,        ///> Period to call sensors loop in milliseconds
     kPeriodWarmup               = 1000,     ///> Period to warmup the system in milliseconds
     kPeriodStabilization        = 100,      ///> Stablization period between respiration cycles
-    kEEPROM_Version             = 2,        ///> EEPROM version must match this version for compatibility
+    kEEPROM_Version             = 3,        ///> EEPROM version must match this version for compatibility
     kMaxCurveCount              = 8,        ///> Maximum respiration curve index count
     kPacketId                   = 0xFEED    ///> Packet Identifier for communications
 };
