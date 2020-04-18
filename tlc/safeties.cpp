@@ -19,8 +19,7 @@ enum eSafetiesConsts
 // Initialize safeties
 bool Safeties_Init()
 {
-    //gSafeties.bEnabled              = true;
-    gSafeties.bEnabled              = false;
+    gSafeties.bEnabled              = true;    
     gSafeties.bCritical             = false;
     gSafeties.bConfigurationInvalid = false;
     
