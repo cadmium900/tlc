@@ -174,7 +174,7 @@ enum eAlarm
     kAlarm_DisconnectedTube             = (1<<5),   ///> Disconnected respiration tube
     kAlarm_CloggedTube                  = (1<<6),   ///> Respiration tube is clogged
 
-    kAlarm_CriticalMask                 = 0xFF,
+    kAlarm_CriticalMask                 = 0xFF & (~kAlarm_BatteryLow),
 
     kAlarm_PeepLowWarning               = (1<<8),   ///> Peep too low warning
     kAlarm_PeepHighWarning              = (1<<9)    ///> Peep too high warning
