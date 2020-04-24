@@ -80,7 +80,16 @@ void loop()
         break;
         
     // Normal processing
-    case kState_Process:    
+    case kState_Process:
+        // Buzz on warnings or alarms
+        if (gDataModel.nSafetyFlags != 0)
+        {
+            digitalWrite(PIN_OUT_BUZZER, LOW);
+        }
+        else
+        {
+            digitalWrite(PIN_OUT_BUZZER, HIGH);
+        }
         break;
         
     // Error state in case of safeties issues
