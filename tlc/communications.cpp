@@ -289,7 +289,7 @@ static void ParseCommand(tPacketHeader* packet)
 
     case kPacketCommand_SetCurve:
         {
-            tPacketCurve* payload = (tPacketCurve*)((uint8_t*)packet + sizeof(tPacketHeader));                       
+            tPacketCurve* payload = (tPacketCurve*)((uint8_t*)packet + sizeof(tPacketHeader));
             bool success = true;
             if (success)
             {

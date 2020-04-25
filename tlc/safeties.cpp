@@ -19,10 +19,10 @@ enum eSafetiesConsts
 // Initialize safeties
 bool Safeties_Init()
 {
-    gSafeties.bEnabled              = true;    
+    gSafeties.bEnabled              = true;
     gSafeties.bCritical             = false;
     gSafeties.bConfigurationInvalid = false;
-    
+
     nMinPressureOkTick              = millis();
     nMaxPressureOkTick              = millis();
 
@@ -62,7 +62,7 @@ void Safeties_Process()
         nMinPressureOkTick = millis();
         nMaxPressureOkTick = millis();
     }
-    
+
 
     // If any safety issue, set bCritical in global safeties structure
     if (gSafeties.bEnabled)
@@ -88,7 +88,7 @@ void Safeties_Process()
         {
             nMaxPressureOkTick = millis();
         }
-        
+
         if (gDataModel.fPressure_mmH2O[0] <= gConfiguration.fMinPressureLimit_mmH2O)
         {
             if (gDataModel.nRqState == kRqState_Start)
@@ -107,10 +107,10 @@ void Safeties_Process()
             }
         }
         else
-        {            
+        {
             nMinPressureOkTick = millis();
         }
-               
+
 
         if (fabs(fPressureDelta) >= gConfiguration.fMaxPressureDelta_mmH2O)
         {

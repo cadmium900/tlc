@@ -28,22 +28,22 @@ bool Control_Init()
 
     gDataModel.nRqState = kRqState_Stop;
     gLastPressureError = 0.0f;
-    
+
     return true;
 }
 
 bool Control_SetCurveFromDataModel()
 {
     if (gDataModel.nRespirationPerMinute > 0)
-    {        
-        float fInhaleTime = gDataModel.fInhaleTime; 
-        float fExhaleTime = gDataModel.fExhaleTime; 
+    {
+        float fInhaleTime = gDataModel.fInhaleTime;
+        float fExhaleTime = gDataModel.fExhaleTime;
 
         // Inhale curve
         uint8_t  rampPointCount = kMaxCurveCount-1;
         uint32_t nPointTickMs   = (uint32_t)((gDataModel.fInhaleRampTime * 1000.0f) / (float)rampPointCount);
         gDataModel.pInhaleCurve.nCount = kMaxCurveCount;
-        
+
         // Generate inhale ramp time (all points minus last target point)
         float accumulatorRatio = (1.0f / (float)rampPointCount) * gDataModel.fInhalePressureTarget_mmH2O;
         float acc = 0.0f;
@@ -52,8 +52,8 @@ bool Control_SetCurveFromDataModel()
             gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = acc;
             gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
             acc += accumulatorRatio;
-            
-            // Clamp to maximum inhale pressure target            
+
+            // Clamp to maximum inhale pressure target
             if (acc > gDataModel.fInhalePressureTarget_mmH2O)
             {
                 acc = gDataModel.fInhalePressureTarget_mmH2O;
@@ -65,7 +65,7 @@ bool Control_SetCurveFromDataModel()
         gDataModel.pInhaleCurve.nSetPoint_TickMs[gDataModel.pInhaleCurve.nCount-1] = (uint32_t)((fInhaleTime - gDataModel.fInhaleRampTime) * 1000.0f);
 
         // Compute exhale ramp time (all points minus last target point)
-        rampPointCount = kMaxCurveCount-1;        
+        rampPointCount = kMaxCurveCount-1;
         nPointTickMs   = (uint16_t)((gDataModel.fExhaleRampTime * 1000.0f) / (float)rampPointCount);
         gDataModel.pExhaleCurve.nCount = kMaxCurveCount;
         accumulatorRatio = (1.0f / (float)rampPointCount) * (gDataModel.fInhalePressureTarget_mmH2O-gDataModel.fExhalePressureTarget_mmH2O);
@@ -75,8 +75,8 @@ bool Control_SetCurveFromDataModel()
             gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = acc;
             gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
             acc -= accumulatorRatio;
-            
-            // Clamp to maximum inhale pressure target            
+
+            // Clamp to maximum inhale pressure target
             if (acc < gDataModel.fExhalePressureTarget_mmH2O)
             {
                 acc = gDataModel.fExhalePressureTarget_mmH2O;
@@ -112,7 +112,7 @@ void Control_PID()
 
     gDataModel.fD = (gDataModel.fPressureError - gLastPressureError) * gConfiguration.fGainD;
     gLastPressureError = gDataModel.fPressureError;
-        
+
     gDataModel.fPID = gDataModel.fP + gDataModel.fI + gDataModel.fD;
     if (gDataModel.fPID > gConfiguration.fPIDLimit)
     {
@@ -122,7 +122,7 @@ void Control_PID()
     {
         gDataModel.fPID = -gConfiguration.fPIDLimit;
     }
-    
+
     if (gDataModel.fPID < 0)
     {
         gDataModel.fPID = 0;
@@ -263,9 +263,9 @@ static bool Exhale()
     }
 
     // During flat part of exhale curve, check for PeepLow and PeepHigh warnings
-#if 0 //*** To configure correctly    
+#if 0 //*** To configure correctly
     if ((millis() - gDataModel.nTickStartExhale) >= (uint32_t)(gDataModel.fExhaleCheckPeepTime * 1000.0f))
-    {           
+    {
         if (gDataModel.fPressure_mmH2O[0] < gDataModel.fPeepLowLimit_mmH2O)
         {
             gDataModel.nSafetyFlags |= kAlarm_PeepLowWarning;
@@ -317,12 +317,12 @@ static bool ComputeRespirationSetPoint()
             BeginRespirationCycle();
             if (StartInhaleCycle())
             {
-				// Force accumulated PID errors to zero to force the system to react faster
-				gDataModel.fI                       = 0.0f;
-				gDataModel.fD                       = 0.0f;
-				gDataModel.fPID                     = 0.0f;
-				gLastPressureError                  = 0.0f;			
-				
+                // Force accumulated PID errors to zero to force the system to react faster
+                gDataModel.fI                       = 0.0f;
+                gDataModel.fD                       = 0.0f;
+                gDataModel.fPID                     = 0.0f;
+                gLastPressureError                  = 0.0f;
+
                 gDataModel.nCycleState = kCycleState_Inhale;
             }
             else
@@ -415,10 +415,10 @@ void Control_Process()
 {
     if (gDataModel.nRqState != kRqState_Start || gDataModel.nState != kState_Process)
     {
-        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);        
+        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
         gDataModel.nTickFromStart = 0;
         gTickStart = millis();
-                
+
         pumpServo.write(750);
 
         ResetRespirationState();
@@ -426,7 +426,7 @@ void Control_Process()
     }
 
     gDataModel.nTickFromStart = millis() - gTickStart;
-    
+
     // Process pressure feedback to match current pressure set point
     switch (gDataModel.nControlMode)
     {

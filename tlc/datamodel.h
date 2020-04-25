@@ -52,7 +52,7 @@ struct tDataModel
     float           fExhaleCheckPeepTime;   ///> Check peep during exhale after this elapsed time (relative to start of exhale cycle)
     float           fPeepLowLimit_mmH2O;    ///> Low Peep limit
     float           fPeepHighLimit_mmH2O;   ///> High Peep limit
-    
+
     float           fPressure_mmH2O[2];     ///> Converted pressure, useable as mmH2O
     float           fPressure_Flow;         ///> Converted flow pressure
     float           fPressureError;         ///> Pressure error: readings vs set-point

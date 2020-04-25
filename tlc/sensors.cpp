@@ -87,7 +87,7 @@ void Sensors_Process()
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
 #endif
 
-    fBatteryAvg += (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);    
+    fBatteryAvg += (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
     ++nBatteryAvgCnt;
 
     if (nBatteryAvgCnt >= 3000)
