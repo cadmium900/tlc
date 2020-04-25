@@ -317,6 +317,12 @@ static bool ComputeRespirationSetPoint()
             BeginRespirationCycle();
             if (StartInhaleCycle())
             {
+				// Force accumulated PID errors to zero to force the system to react faster
+				gDataModel.fI                       = 0.0f;
+				gDataModel.fD                       = 0.0f;
+				gDataModel.fPID                     = 0.0f;
+				gLastPressureError                  = 0.0f;			
+				
                 gDataModel.nCycleState = kCycleState_Inhale;
             }
             else
