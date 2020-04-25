@@ -79,7 +79,7 @@ bool Configuration_SetDefaults()
     gConfiguration.fGainI                   = 0.01f;
     gConfiguration.fGainD                   = 0.00f;
     gConfiguration.fILimit                  = 700.0f;
-    gConfiguration.fPILimit                 = 1000.0f;
+    gConfiguration.fPIDLimit                = 1000.0f;
     gConfiguration.fControlTransfer         = 1.5f;
     gConfiguration.fPatientTrigger_mmH2O    = 20.0f;
     gConfiguration.nServoExhaleOpenAngle    = 1500;

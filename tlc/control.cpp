@@ -15,6 +15,9 @@ ServoTimer2 exhaleValveServo;
 ServoTimer2 pumpServo;
 uint32_t gTickStart = 0;
 
+// Last Error for derivative computation
+static float gLastPressureError = 0.0f;
+
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
@@ -24,6 +27,7 @@ bool Control_Init()
     pumpServo.write(750);  // DE 750 a 2250
 
     gDataModel.nRqState = kRqState_Stop;
+    gLastPressureError = 0.0f;
     
     return true;
 }
@@ -106,24 +110,25 @@ void Control_PID()
         gDataModel.fI = -gConfiguration.fILimit;
     }
 
-    gDataModel.fPI = gDataModel.fP + gDataModel.fI;
-    if (gDataModel.fPI > gConfiguration.fPILimit)
+    gDataModel.fD = (gDataModel.fPressureError - gLastPressureError) * gConfiguration.fGainD;
+    gLastPressureError = gDataModel.fPressureError;
+        
+    gDataModel.fPID = gDataModel.fP + gDataModel.fI + gDataModel.fD;
+    if (gDataModel.fPID > gConfiguration.fPIDLimit)
     {
-        gDataModel.fPI = gConfiguration.fPILimit;
+        gDataModel.fPID = gConfiguration.fPIDLimit;
     }
-    else if (gDataModel.fPI < -gConfiguration.fPILimit)
+    else if (gDataModel.fPID < -gConfiguration.fPIDLimit)
     {
-        gDataModel.fPI = -gConfiguration.fPILimit;
+        gDataModel.fPID = -gConfiguration.fPIDLimit;
+    }
+    
+    if (gDataModel.fPID < 0)
+    {
+        gDataModel.fPID = 0;
     }
 
-    // Note: Derivative not used, not necessary for now.
-
-    if (gDataModel.fPI < 0)
-    {
-        gDataModel.fPI = 0;
-    }
-
-    gDataModel.nPWMPump = (uint16_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
+    gDataModel.nPWMPump = (uint16_t)(gDataModel.fPID * gConfiguration.fControlTransfer);
 }
 
 // Return true when condition for respiration has been triggered
@@ -390,7 +395,9 @@ static void ResetRespirationState()
     gDataModel.nTickRespiration         = millis(); // Respiration cycle start tick. Used to compute
     gDataModel.nCycleState              = kCycleState_WaitTrigger;
     gDataModel.fI                       = 0.0f;
-    gDataModel.fPI                      = 0.0f;
+    gDataModel.fD                       = 0.0f;
+    gDataModel.fPID                     = 0.0f;
+    gLastPressureError                  = 0.0f;
 
     gDataModel.nCurveIndex              = 0;
     gDataModel.nTickSetPoint            = 0;
