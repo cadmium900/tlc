@@ -59,7 +59,7 @@ struct tDataModel
     float           fP;                     ///> Control Proportional
     float           fI;                     ///> Control Integral
     float           fD;                     ///> Control Derivative
-    float           fPI;                    ///> Control Sum of Proportional and Integral errors
+    float           fPID;                   ///> Control Sum of Proportional, Integral and Derivative errors
     uint16_t        nPWMPump;               ///> Pump PWM power output
 
     uint32_t        nTickFromStart;         ///> Ticks in ms since the start of respiration
@@ -115,7 +115,7 @@ HXCOMPILATIONASSERT(assertCheckOffsetTerminator,     (offsetof(tDataModel, nTerm
                         (uint16_t)offsetof(tDataModel, fP) + \
                         (uint16_t)offsetof(tDataModel, fI) + \
                         (uint16_t)offsetof(tDataModel, fD) + \
-                        (uint16_t)offsetof(tDataModel, fPI) + \
+                        (uint16_t)offsetof(tDataModel, fPID) + \
                         (uint16_t)offsetof(tDataModel, nPWMPump) + \
                         (uint16_t)offsetof(tDataModel, nTickFromStart) + \
                         (uint16_t)offsetof(tDataModel, nTickControl) + \

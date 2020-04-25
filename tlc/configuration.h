@@ -24,7 +24,7 @@ struct tConfiguration
     float       fGainI;                     ///> Control gain I
     float       fGainD;                     ///> Control gain D
     float       fILimit;                    ///> Integral error limit
-    float       fPILimit;                   ///> Proportional+Integral error limit
+    float       fPIDLimit;                  ///> Proportional+Integral+Derivative error limit
     float       fControlTransfer;           ///> Control transfer from adjusted errors to pwm
     float       fPatientTrigger_mmH2O;      ///> Patient triggers respiration when this value is reached (In TriggerMode Patient or semi automatic)
     uint16_t    nServoExhaleOpenAngle;      ///> Angle in pwm time (750..2250) when exhale servo valve is open
@@ -45,7 +45,7 @@ HXCOMPILATIONASSERT(assertConfigurationSizeCheck,        (sizeof(tConfiguration)
                         (uint16_t)offsetof(tConfiguration, fGainI) + \
                         (uint16_t)offsetof(tConfiguration, fGainD) + \
                         (uint16_t)offsetof(tConfiguration, fILimit) + \
-                        (uint16_t)offsetof(tConfiguration, fPILimit) + \
+                        (uint16_t)offsetof(tConfiguration, fPIDLimit) + \
                         (uint16_t)offsetof(tConfiguration, fControlTransfer) + \
                         (uint16_t)offsetof(tConfiguration, fPatientTrigger_mmH2O) + \
                         (uint16_t)offsetof(tConfiguration, nServoExhaleOpenAngle) + \
