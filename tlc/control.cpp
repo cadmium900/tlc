@@ -11,23 +11,32 @@
 #include "TimerOne.h"
 #include "lcd_keypad.h"
 
+#define USE_RAMPCURVE 0
+
 ServoTimer2 exhaleValveServo;
 ServoTimer2 pumpServo;
 uint32_t gTickStart = 0;
 
 // Last Error for derivative computation
-static float gLastPressureError = 0.0f;
+static float    gLastPressureError = 0.0f;
+static uint16_t gMinimumPWM = 0;
+const uint16_t  kBlowerPrimeTimeMs = 300;
+const uint16_t  kESCPrimePWM = 100;
+const float     kCmdFilterGain = 0.5f;
+static float    fFilteredCmd = 0.0f;
+static float    fTargetCmd   = 0.0f;
 
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
     gDataModel.nTickFromStart = millis();
-    exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
+    //exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
-    pumpServo.write(750);  // DE 750 a 2250
+    pumpServo.write(1000);  // DE 1000 a 2000
 
     gDataModel.nRqState = kRqState_Stop;
-    gLastPressureError = 0.0f;
+    gLastPressureError  = 0.0f;
+    gMinimumPWM         = 0;
 
     return true;
 }
@@ -39,6 +48,17 @@ bool Control_SetCurveFromDataModel()
         float fInhaleTime = gDataModel.fInhaleTime;
         float fExhaleTime = gDataModel.fExhaleTime;
 
+#if USE_RAMPCURVE == 0
+        // Last inhale point will last for the remaining inhaleTime
+        gDataModel.pInhaleCurve.nCount = 1;
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[gDataModel.pInhaleCurve.nCount-1]  = gDataModel.fInhalePressureTarget_mmH2O;
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[gDataModel.pInhaleCurve.nCount-1] = (uint32_t)((fInhaleTime) * 1000.0f);
+
+        gDataModel.pExhaleCurve.nCount = 1;
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[gDataModel.pExhaleCurve.nCount-1]  = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.pExhaleCurve.nCount-1] = (uint32_t)((fExhaleTime) * 1000.0f);
+        return true;
+#else
         // Inhale curve
         uint8_t  rampPointCount = kMaxCurveCount-1;
         uint32_t nPointTickMs   = (uint32_t)((gDataModel.fInhaleRampTime * 1000.0f) / (float)rampPointCount);
@@ -49,7 +69,7 @@ bool Control_SetCurveFromDataModel()
         float acc = 0.0f;
         for (int a = 0; a < rampPointCount; ++a)
         {
-            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fInhalePressureTarget_mmH2O;//*** temporarry hack acc;
             gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
             acc += accumulatorRatio;
 
@@ -72,7 +92,7 @@ bool Control_SetCurveFromDataModel()
         acc = gDataModel.fInhalePressureTarget_mmH2O;
         for (int a = 0; a < rampPointCount; ++a)
         {
-            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = acc;
+            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fExhalePressureTarget_mmH2O; //*** tmeporary hackeacc;
             gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
             acc -= accumulatorRatio;
 
@@ -88,6 +108,7 @@ bool Control_SetCurveFromDataModel()
         gDataModel.pExhaleCurve.nSetPoint_TickMs[gDataModel.pExhaleCurve.nCount-1] = (uint32_t)((fExhaleTime - gDataModel.fExhaleRampTime) * 1000.0f);
 
         return true;
+#endif        
     }
 
     gSafeties.bConfigurationInvalid = true;
@@ -96,11 +117,15 @@ bool Control_SetCurveFromDataModel()
 
 // Control using a PID with pressure feedback
 void Control_PID()
-{
+{ 
     gDataModel.fPressureError = gDataModel.fRequestPressure_mmH2O - gDataModel.fPressure_mmH2O[0];
     gDataModel.fP = gDataModel.fPressureError * gConfiguration.fGainP;
 
-    gDataModel.fI += (gDataModel.fPressureError * gConfiguration.fGainI);
+    fTargetCmd += (gDataModel.fPressureError * gConfiguration.fGainI);
+  
+  fFilteredCmd = fFilteredCmd + (fTargetCmd - fFilteredCmd) * kCmdFilterGain;
+  gDataModel.fI = fFilteredCmd;
+  
     if (gDataModel.fI > gConfiguration.fILimit)
     {
         gDataModel.fI = gConfiguration.fILimit;
@@ -139,6 +164,11 @@ static bool CheckTrigger()
     {
     case kTriggerMode_Timed:
         trigger = ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
+
+        if ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (uint32_t)((60000 / gDataModel.nRespirationPerMinute) - kBlowerPrimeTimeMs))
+        {
+            gMinimumPWM = kESCPrimePWM;
+        }
         break;
 
     case kTriggerMode_Patient:
@@ -156,6 +186,10 @@ static bool CheckTrigger()
             trigger = true;
         }
         trigger |= ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
+        if ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (uint32_t)((60000 / gDataModel.nRespirationPerMinute) - kBlowerPrimeTimeMs))
+        {
+            gMinimumPWM = kESCPrimePWM;
+        }
         break;
 
     default:
@@ -182,13 +216,14 @@ static bool EndRespirationCycle()
 
 static bool StartInhaleCycle()
 {
+    gMinimumPWM = kESCPrimePWM;
     if (gDataModel.pInhaleCurve.nCount <= 0)
     {
         return false;
     }
 
     // Make sure exhale valve is closed
-    exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
+    //exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
 
     // Start a new inhale cycle
     gDataModel.nCurveIndex              = 0;
@@ -202,7 +237,7 @@ static bool StartInhaleCycle()
 static bool Inhale()
 {
     // Check for overflow of allowed maximum curve setpoint count
-    if (gDataModel.nCurveIndex >= kMaxCurveCount)
+    if (gDataModel.nCurveIndex > kMaxCurveCount)
     {
         // Raise a safety issue
         gSafeties.bCritical     = true;
@@ -231,6 +266,7 @@ static bool StopInhaleCycle()
 
 static bool StartExhaleCycle()
 {
+    gMinimumPWM = 0; // Set minimum pwm to 0 to be able to activate brakes
     if (gDataModel.pExhaleCurve.nCount <= 0)
     {
         return false;
@@ -242,7 +278,7 @@ static bool StartExhaleCycle()
     gDataModel.nTickSetPoint            = millis();
     gDataModel.fRequestPressure_mmH2O   = gDataModel.pExhaleCurve.fSetPoint_mmH2O[0];
 
-    exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
+    //exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
     return true;
 }
@@ -298,7 +334,7 @@ static bool Exhale()
 
 static bool StopExhaleCycle()
 {
-    exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
+    //exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
 
     return true;
 }
@@ -322,6 +358,8 @@ static bool ComputeRespirationSetPoint()
                 gDataModel.fD                       = 0.0f;
                 gDataModel.fPID                     = 0.0f;
                 gLastPressureError                  = 0.0f;
+        fFilteredCmd            = 0.0f;
+        fTargetCmd              = 0.0f;
 
                 gDataModel.nCycleState = kCycleState_Inhale;
             }
@@ -419,7 +457,7 @@ void Control_Process()
         gDataModel.nTickFromStart = 0;
         gTickStart = millis();
 
-        pumpServo.write(750);
+        pumpServo.write(1000);
 
         ResetRespirationState();
         return;
@@ -449,11 +487,16 @@ void Control_Process()
         break;
     };
 
-    // Pump power to output
-    uint16_t pwm = gDataModel.nPWMPump + 750;
-    if (pwm > 2250)
+    // Pump power to output, do not allow zero pwm iun inhale    
+    if (gDataModel.nPWMPump <= gMinimumPWM)
     {
-        pwm = 2250;
+        gDataModel.nPWMPump = gMinimumPWM;
+    }
+    
+    uint16_t pwm = gDataModel.nPWMPump + 1000;
+    if (pwm > 2000)
+    {
+        pwm = 2000;
     }
     pumpServo.write(pwm);
 }
